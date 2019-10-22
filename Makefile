@@ -13,10 +13,10 @@ build: ## Build the binary for linux
 	CGO_ENABLED=0 GOOS=linux go build	-o bin/$(PROJECT_NAME)	./cmd/envoyxds
 
 docker:
-	APP=$(PROJECT_NAME) docker build -t docker.pkg.github.com/bladedancer/$(PROJECT_NAME):latest_dev	.
+	APP=$(PROJECT_NAME) docker build -t docker.pkg.github.com/bladedancer/$(PROJECT_NAME)/$(PROJECT_NAME):latest_dev	.
 
 push:
-	docker push docker.pkg.github.com/bladedancer/$(PROJECT_NAME):latest_dev
+	docker push docker.pkg.github.com/bladedancer/$(PROJECT_NAME)/$(PROJECT_NAME):latest_dev
 
 clean:
 	@rm	-rf	${OUT_DIR}
