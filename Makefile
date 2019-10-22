@@ -1,24 +1,21 @@
-GO_VERSION=1.11
-GLIDE_DOCKER_VERSION=0.12.3-go1.8
-
 PROJECT_NAME := envoyxds
 PKG_LIST := $(shell go list ./... | grep -v /vendor/)
 
-all: lint build docker ## Build everything
+all: lint build docker push ## Build everything
 
 lint: ## Lint the files
 	@golint	-set_exit_status	${PKG_LIST}
 
 build: ## Build the binary for linux
-	CGO_ENABLED=0 GOOS=linux go build	-o bin/$(PROJECT_NAME)	./cmd/envoyxds
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build	-o bin/$(PROJECT_NAME)	./cmd/envoyxds
 
-docker:
+docker: ## Build docker image
 	APP=$(PROJECT_NAME) docker build -t docker.pkg.github.com/bladedancer/$(PROJECT_NAME)/$(PROJECT_NAME):latest_dev	.
 
-push:
+push: ## Push docker image
 	docker push docker.pkg.github.com/bladedancer/$(PROJECT_NAME)/$(PROJECT_NAME):latest_dev
 
-clean:
+clean: ## Clean out dir
 	@rm	-rf	${OUT_DIR}
 
 help: ## Display this help screen

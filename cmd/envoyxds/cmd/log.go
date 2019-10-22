@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/bladedancer/envoyxds/pkg/envoyxds"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,7 +47,7 @@ func setupLogging(level string, format string) error {
 
 	log = logger.WithField(logPackage, "cmd")
 
-	//apicauth.SetLog(logger.WithField(logPackage, "apicauth"))
+	envoyxds.SetLog(logger.WithField(logPackage, "envoyxds"))
 
 	return nil
 }

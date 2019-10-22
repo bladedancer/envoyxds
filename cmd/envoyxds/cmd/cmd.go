@@ -3,6 +3,7 @@ package cmd
 import (
 	"strings"
 
+	"github.com/bladedancer/envoyxds/pkg/envoyxds"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -20,11 +21,11 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.Flags().String("placeholder", "", "Will add stuff as needed.")
+	RootCmd.Flags().Int("port", 11000, "The XDS GRPC port.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")
 
-	bindOrPanic("", RootCmd.Flags().Lookup("placeholder"))
+	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("log.level", RootCmd.Flags().Lookup("logLevel"))
 	bindOrPanic("log.format", RootCmd.Flags().Lookup("logFormat"))
 }
@@ -46,5 +47,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := setupLogging(viper.GetString("log.level"), viper.GetString("log.format")); err != nil {
 		return err
 	}
-	return nil
+	config := syncConfigFromViper()
+	return envoyxds.Run(config)
 }
