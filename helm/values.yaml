@@ -1,1 +1,2 @@
-envoyxds:
+xds:
+  port: 21212

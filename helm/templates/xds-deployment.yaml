@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xds
+  labels:
+    app: {{ .Chart.Name }}-xds
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-xds
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-xds
+    spec:
+      containers:
+      - name: xds
+        image: docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
+        env:
+          - name: PORT
+            value: "10000"
+        ports:
+        - containerPort: 10000
