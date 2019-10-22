@@ -25,7 +25,6 @@ func SetLog(newLog logrus.FieldLogger) {
 
 // Run entry point for Envoy XDS command line.
 func Run(conf Config) error {
-	log.Info("GOT THIS FAR AT LEAST")
 	snapshotCache := cache.NewSnapshotCache(false, cache.IDHash{}, nil)
 	server := xds.NewServer(snapshotCache, nil)
 	grpcServer := grpc.NewServer()
@@ -40,11 +39,7 @@ func Run(conf Config) error {
 	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 
-	// tens := strings.Split(tennants, ",")
-	// for _, t := range tens {
-	// 	loadSnapshot(t, path+"/route-"+t+".json", snapshotCache)
-	// }
-	//go watchCfg(snapshotCache)
+	go watch(snapshotCache)
 
 	go func() {
 		if err = grpcServer.Serve(lis); err != nil {

@@ -20,6 +20,7 @@ FROM scratch
 # Copy binary and user from previous build step
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /go/src/github.com/bladedancer/envoyxds/bin/envoyxds /root/envoyxds
+COPY --from=builder /go/src/github.com/bladedancer/envoyxds/envoy /
 COPY --from=builder /etc/passwd /etc/passwd
 USER bladedancer
 

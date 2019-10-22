@@ -1,5 +1,5 @@
-hash: 1360c7b9baece116372bee6dfde7e1adcf812cfec725d5ed4c470d3012c923c1
-updated: 2019-10-22T12:27:05.404942517+01:00
+hash: 5bc6c9c6e9767f4654860897e003b5b7f0e3399bf766747596d29d8736c5ae5e
+updated: 2019-10-22T14:25:31.330634231+01:00
 imports:
 - name: github.com/envoyproxy/go-control-plane
   version: 52b167a709f111e6298136064bbaae43419ab22f
@@ -27,6 +27,13 @@ imports:
   - validate
 - name: github.com/fsnotify/fsnotify
   version: ccc981bf80385c528a65fbfdd49bf2d8da22aa23
+- name: github.com/gogo/protobuf
+  version: 5628607bb4c51c3157aacc3a50f0ab707582b805
+  subpackages:
+  - jsonpb
+  - proto
+  - sortkeys
+  - types
 - name: github.com/golang/protobuf
   version: 6c65a5562fc06764971b7c5d05c76c75e84bdbf7
   subpackages:

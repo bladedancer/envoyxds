@@ -1,0 +1,24 @@
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "name": "local_service",
+      "domains": [
+        "*"
+      ],
+      "routes": [
+        {
+          "name": "route1",
+          "match": {
+            "prefix": "/customera"
+          },
+          "route": {
+            "cluster": "web_service",
+            "prefixRewrite": "/",
+            "hostRewrite": "www.google.com"
+          }
+        }
+      ]
+    }
+  ]
+}
