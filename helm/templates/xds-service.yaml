@@ -11,6 +11,7 @@ spec:
   selector:
     app: {{ .Chart.Name }}-xds
   ports:
-  - protocol: TCP
+  - name: grpc-xds
+    protocol: TCP
     port: {{ .Values.xds.port }}
     targetPort: 10000

@@ -25,12 +25,15 @@ func SetLog(newLog logrus.FieldLogger) {
 
 // Run entry point for Envoy XDS command line.
 func Run(conf Config) error {
+
+	callbacks := Calls{}
+
 	snapshotCache := cache.NewSnapshotCache(false, cache.IDHash{}, nil)
-	server := xds.NewServer(snapshotCache, nil)
+	server := xds.NewServer(snapshotCache, callbacks)
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Port))
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
 
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
@@ -43,7 +46,7 @@ func Run(conf Config) error {
 
 	go func() {
 		if err = grpcServer.Serve(lis); err != nil {
-			log.Error(err)
+			log.Fatal(err)
 		}
 	}()
 
