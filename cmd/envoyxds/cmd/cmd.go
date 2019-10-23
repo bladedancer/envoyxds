@@ -22,17 +22,19 @@ var RootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.Flags().Int("port", 10000, "The XDS GRPC port.")
+	RootCmd.Flags().String("path", "/", "The path for the config.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
+	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
 	bindOrPanic("log.level", RootCmd.Flags().Lookup("logLevel"))
 	bindOrPanic("log.format", RootCmd.Flags().Lookup("logFormat"))
 }
 
 func initConfig() {
 	viper.SetTypeByDefaultValue(true)
-	viper.SetEnvPrefix("csa")
+	viper.SetEnvPrefix("xds")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 }

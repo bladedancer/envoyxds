@@ -14,4 +14,4 @@ spec:
   - name: grpc-xds
     protocol: TCP
     port: {{ .Values.xds.port }}
-    targetPort: 10000
+    targetPort: 12000

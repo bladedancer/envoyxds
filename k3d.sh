@@ -11,7 +11,7 @@ kubectl cluster-info
 echo ======================
 echo ===   Setup Helm   ===
 echo ======================
- 
+
 cat > rbac.config << EOF
 apiVersion: v1
 kind: ServiceAccount
@@ -32,7 +32,7 @@ subjects:
     name: tiller
     namespace: kube-system
 EOF
- 
+
 kubectl apply -f rbac.config
 helm init --service-account tiller --history-max 200
 helm repo up
@@ -41,7 +41,7 @@ echo ======================
 echo === Install Images ===
 echo ======================
 
-docker pull docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
+#docker pull docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
 k3d i --name=xds  docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
 
 echo ======================
@@ -49,10 +49,10 @@ echo ===    Wait     ===
 echo ======================
 
 while [[ $(kubectl -n kube-system get pods -l app=helm -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for helm" && sleep 3; done
- 
+
 echo ======================
 echo ===    Install     ===
 echo ======================
 
 
-helm install helm
+helm install --name=xds ./helm

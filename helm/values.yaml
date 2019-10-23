@@ -2,11 +2,11 @@ xds:
   port: 9000
 
 envoy:
-  # args:
-  #   - -l
-  #   - debug
-  #   - -c
-  #   - /config/envoy.yaml
+  args:
+    - -l
+    - debug
+    - -c
+    - /config/envoy.yaml
   files:
     envoy.yaml: |-
       ## refs:
@@ -19,7 +19,7 @@ envoy:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: whatever
+        id: TenantA
         cluster: service_xds
       static_resources:
         listeners:
@@ -55,5 +55,5 @@ envoy:
           lb_policy: ROUND_ROBIN
           hosts:
           - socket_address:
-              address: xds
+              address: xds.default.svc.cluster.local
               port_value: 9000

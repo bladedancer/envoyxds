@@ -8,5 +8,6 @@ import (
 func syncConfigFromViper() envoyxds.Config {
 	return envoyxds.Config{
 		Port: viper.GetInt("port"),
+		Path: viper.GetString("path"),
 	}
 }

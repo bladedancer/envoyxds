@@ -5,9 +5,10 @@ RUN mkdir -p /go/src/github.com/bladedancer/envoyxds
 WORKDIR /go/src/github.com/bladedancer/envoyxds
 
 # Copy necessary files
-ADD . . 
+ADD . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o bin/envoyxds ./cmd/envoyxds
+RUN rm -rf bin
+RUN CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -o bin/envoyxds ./cmd/envoyxds
 
 # Create non-root user
 RUN addgroup -S bladedancer && adduser -S bladedancer -G bladedancer

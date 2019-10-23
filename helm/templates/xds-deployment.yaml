@@ -20,5 +20,8 @@ spec:
       containers:
       - name: xds
         image: docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
+        env:
+          - name: XDS_PORT
+            value: "12000"
         ports:
-        - containerPort: 10000
+        - containerPort: 12000

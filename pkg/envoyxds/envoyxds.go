@@ -13,6 +13,7 @@ import (
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var log logrus.FieldLogger = logrus.WithField("package", "sync")
@@ -31,7 +32,8 @@ func Run(conf Config) error {
 	snapshotCache := cache.NewSnapshotCache(false, cache.IDHash{}, nil)
 	server := xds.NewServer(snapshotCache, callbacks)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Port))
+	reflection.Register(grpcServer)
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", conf.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +44,7 @@ func Run(conf Config) error {
 	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 
-	go watch(snapshotCache)
+	go watch(snapshotCache, conf.Path)
 
 	go func() {
 		if err = grpcServer.Serve(lis); err != nil {

@@ -23,7 +23,7 @@ func extractTenant(fn string) string {
 //Watch for fs event changes on the config filesystem
 // and load new snapshot for the given tenant identified in the fs event
 // Note: this is not the way we will want to implement, just a way to demonstrate
-func watchCfg(c cache.SnapshotCache) {
+func watchCfg(c cache.SnapshotCache, path string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +55,7 @@ func watchCfg(c cache.SnapshotCache) {
 		}
 	}()
 
-	err = watcher.Add("/")
+	err = watcher.Add(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,12 +90,11 @@ func loadSnapshot(t string, fileLoc string, c cache.SnapshotCache) {
 	}
 }
 
-func watch(snapshotCache cache.SnapshotCache) {
-	path := "/"
+func watch(snapshotCache cache.SnapshotCache, path string) {
 	tenants := "TenantA,TenantB"
 	tens := strings.Split(tenants, ",")
 	for _, t := range tens {
 		loadSnapshot(t, path+"/route-"+t+".json", snapshotCache)
 	}
-	go watchCfg(snapshotCache)
+	go watchCfg(snapshotCache, path)
 }
