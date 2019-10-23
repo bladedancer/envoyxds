@@ -2,11 +2,11 @@ xds:
   port: 9000
 
 envoy:
-  args:
-    - -l
-    - debug
-    - -c
-    - /config/envoy.yaml
+  # args:
+  #   - -l
+  #   - debug
+  #   - -c
+  #   - /config/envoy.yaml
   files:
     envoy.yaml: |-
       ## refs:
@@ -53,7 +53,19 @@ envoy:
           type: LOGICAL_DNS
           dns_lookup_family: V4_ONLY
           lb_policy: ROUND_ROBIN
+          http2_protocol_options: {}
           hosts:
           - socket_address:
               address: xds.default.svc.cluster.local
               port_value: 9000
+        - name: web_service
+          connect_timeout: 0.25s
+          type: LOGICAL_DNS
+          dns_lookup_family: V4_ONLY
+          lb_policy: ROUND_ROBIN
+          hosts:
+            - socket_address:
+                address: google.com
+                port_value: 443
+          tls_context:
+            sni: www.google.com
