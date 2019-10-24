@@ -41,8 +41,8 @@ echo ======================
 echo === Install Images ===
 echo ======================
 
-#docker pull docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
-k3d i --name=xds  docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
+#docker pull bladedancer/envoyxds:latest
+k3d i --name=xds  bladedancer/envoyxds:latest
 
 echo ======================
 echo ===    Wait     ===

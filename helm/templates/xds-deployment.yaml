@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: xds
+  namespace: {{.Release.Namespace}}
   labels:
     app: {{ .Chart.Name }}-xds
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
@@ -19,7 +20,7 @@ spec:
     spec:
       containers:
       - name: xds
-        image: docker.pkg.github.com/bladedancer/envoyxds/envoyxds:latest_dev
+        image: bladedancer/envoyxds:latest
         env:
           - name: XDS_PORT
             value: "12000"

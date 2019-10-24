@@ -26,8 +26,8 @@ func getVirtualHost(id int, numRoutes int, domain string) *route.VirtualHost {
 		route := route.Route{
 			Name: fmt.Sprintf("tenant-%d-route-%d", id, i),
 			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{
-					Prefix: fmt.Sprintf("/route-%d", i),
+				PathSpecifier: &route.RouteMatch_Path{
+					Path: fmt.Sprintf("/route-%d", i),
 				},
 			},
 			Action: &route.Route_Route{

@@ -1,16 +1,21 @@
 xds:
+  address: xds
   port: 9000
   tenants: 1000
   routes: 100
   domain: "bladedancer.dynu.net:48080"
 
 envoy:
+  # Have to duplicate these
+  xds:
+    address: xds
+    port: 9000
   # args:
   #   - -l
   #   - debug
   #   - -c
   #   - /config/envoy.yaml
-  files:
+  templates:
     envoy.yaml: |-
       ## refs:
       ## - https://www.envoyproxy.io/docs/envoy/latest/start/start#quick-start-to-run-simple-example
@@ -59,8 +64,8 @@ envoy:
           http2_protocol_options: {}
           hosts:
           - socket_address:
-              address: xds.default.svc.cluster.local
-              port_value: 9000
+              address: {{ .Values.xds.address }}
+              port_value: {{ .Values.xds.port }}
         - name: web_service
           connect_timeout: 0.25s
           type: LOGICAL_DNS
