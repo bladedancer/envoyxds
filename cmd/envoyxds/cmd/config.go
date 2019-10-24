@@ -7,7 +7,10 @@ import (
 
 func syncConfigFromViper() envoyxds.Config {
 	return envoyxds.Config{
-		Port: viper.GetInt("port"),
-		Path: viper.GetString("path"),
+		Port:       viper.GetInt("port"),
+		Path:       viper.GetString("path"),
+		NumTenants: viper.GetInt("tenants"),
+		NumRoutes:  viper.GetInt("routes"),
+		Domain:     viper.GetString("domain"),
 	}
 }

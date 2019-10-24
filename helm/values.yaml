@@ -1,5 +1,8 @@
 xds:
   port: 9000
+  tenants: 1000
+  routes: 100
+  domain: "bladedancer.dynu.net:48080"
 
 envoy:
   # args:
@@ -19,7 +22,7 @@ envoy:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: TenantA
+        id: shard-0
         cluster: service_xds
       static_resources:
         listeners:

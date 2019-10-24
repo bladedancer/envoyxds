@@ -23,5 +23,11 @@ spec:
         env:
           - name: XDS_PORT
             value: "12000"
+          - name: XDS_TENANTS
+            value: "{{ .Values.xds.tenants }}"
+          - name: XDS_ROUTES
+            value: "{{ .Values.xds.routes }}"
+          - name: XDS_DOMAIN
+            value: {{ .Values.xds.domain }}
         ports:
         - containerPort: 12000

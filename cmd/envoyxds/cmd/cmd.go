@@ -25,11 +25,17 @@ func init() {
 	RootCmd.Flags().String("path", "/", "The path for the config.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")
+	RootCmd.Flags().Int("tenants", 10, "The number of tenants.")
+	RootCmd.Flags().Int("routes", 5, "The number of routes per tenant.")
+	RootCmd.Flags().String("domain", "bladedancer.dynu.net", "The domain for the routes.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
 	bindOrPanic("log.level", RootCmd.Flags().Lookup("logLevel"))
 	bindOrPanic("log.format", RootCmd.Flags().Lookup("logFormat"))
+	bindOrPanic("tenants", RootCmd.Flags().Lookup("tenants"))
+	bindOrPanic("routes", RootCmd.Flags().Lookup("routes"))
+	bindOrPanic("domain", RootCmd.Flags().Lookup("domain"))
 }
 
 func initConfig() {

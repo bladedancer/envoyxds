@@ -44,7 +44,7 @@ func Run(conf Config) error {
 	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 
-	go watch(snapshotCache, conf.Path)
+	go watch(snapshotCache, conf)
 
 	go func() {
 		if err = grpcServer.Serve(lis); err != nil {
