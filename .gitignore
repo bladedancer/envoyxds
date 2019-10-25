@@ -1,4 +1,5 @@
-.idea/**
+.idea/
+*.iml
 vendor
 bin
 rbac.config
