@@ -21,7 +21,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.Flags().Int("port", 10000, "The XDS GRPC port.")
+	RootCmd.Flags().Uint32("port", 10000, "The XDS GRPC port.")
 	RootCmd.Flags().String("path", "/", "The path for the config.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")

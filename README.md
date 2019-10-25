@@ -41,6 +41,7 @@ The only requirement is that *.mydomain.com will resolve to the server run k3d.
 
 ```
 kubectl port-forward --address 0.0.0.0 svc/envoy 443:443
+kubectl port-forward --address 0.0.0.0 deployment/xds-envoy 9901
 ```
 
 Then configure your firewall to route incoming requests to that machine, such that urls like: `https://test-9.bladedancer.dynu.net/route-1` resolve.
