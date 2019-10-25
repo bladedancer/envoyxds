@@ -1,6 +1,9 @@
 package envoyxds
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 )
 
@@ -13,7 +16,7 @@ func loadSnapshot(numTenants int, numRoutes int, domain string, c cache.Snapshot
 		routeConfig,
 	}
 	log.Infof("Num Tenants: %d, Num Routes %d, Domain: %s", numTenants, numRoutes, domain)
-	err := c.SetSnapshot("shard-0", cache.NewSnapshot(string(version), nil, nil, rts, nil))
+	err := c.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, nil))
 	version++
 	if err != nil {
 		log.Error(err)
@@ -22,5 +25,34 @@ func loadSnapshot(numTenants int, numRoutes int, domain string, c cache.Snapshot
 
 func watch(snapshotCache cache.SnapshotCache, conf Config) {
 	loadSnapshot(conf.NumTenants, conf.NumRoutes, conf.Domain, snapshotCache)
-	// TODO SOME DYNAMIC UPDATES...hook up to db or timer
+
+	// Hack in a special case where the cache keeps growing
+	if conf.Pump > 0 {
+		log.Infof("Pumping new route every %d seconds", conf.Pump)
+		go pump(snapshotCache, conf)
+	}
+}
+
+func pump(snapshotCache cache.SnapshotCache, conf Config) {
+	tick := time.NewTicker(time.Duration(conf.Pump) * time.Second)
+	i := 1
+
+	go func() {
+		for {
+			select {
+			case <-tick.C:
+				log.Infof("Pump %d", conf.NumRoutes+i)
+				routeConfig := GetRouteConfigurations(conf.NumTenants, conf.NumRoutes+i, conf.Domain)
+				i++
+				rts := []cache.Resource{
+					routeConfig,
+				}
+				err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, nil))
+				version++
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}()
 }

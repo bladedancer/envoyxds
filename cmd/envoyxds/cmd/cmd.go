@@ -28,6 +28,7 @@ func init() {
 	RootCmd.Flags().Int("tenants", 10, "The number of tenants.")
 	RootCmd.Flags().Int("routes", 5, "The number of routes per tenant.")
 	RootCmd.Flags().String("domain", "bladedancer.dynu.net", "The domain for the routes.")
+	RootCmd.Flags().Int64("pump", 0, "If set this adds a new route every N seconds.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))

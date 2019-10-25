@@ -7,4 +7,5 @@ type Config struct {
 	NumTenants int
 	NumRoutes  int
 	Domain     string
+	Pump       int64
 }

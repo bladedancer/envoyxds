@@ -12,5 +12,6 @@ func syncConfigFromViper() envoyxds.Config {
 		NumTenants: viper.GetInt("tenants"),
 		NumRoutes:  viper.GetInt("routes"),
 		Domain:     viper.GetString("domain"),
+		Pump:       viper.GetInt64("pump"),
 	}
 }

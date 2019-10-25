@@ -3,6 +3,7 @@ xds:
   port: 9000
   tenants: 1000
   routes: 100
+  pumpInterval: 10
   domain: "bladedancer.dynu.net"
 
 envoy:
