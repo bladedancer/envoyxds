@@ -3,7 +3,7 @@ xds:
   port: 9000
   tenants: 1000
   routes: 100
-  domain: "bladedancer.dynu.net:48080"
+  domain: "bladedancer.dynu.net"
 
 envoy:
   # Have to duplicate these
@@ -15,6 +15,25 @@ envoy:
   #   - debug
   #   - -c
   #   - /config/envoy.yaml
+  secretMounts:
+    certs:
+      mountPath: /certs
+      secretName: default-tls
+      defaultMode: 511 # TODO
+  ports:
+    n0:
+      containerPort: 443
+      protocol: TCP
+  service:
+    type: LoadBalancer
+    ports:
+      n0:
+        port: 443
+        protocol: TCP
+    # annotations:
+    #   external-dns.alpha.kubernetes.io/hostname: '*.envoy.six.moloko.apic-k8s.axwaytest.net.'
+    #   service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: Project=apicentral
+    #   service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
   templates:
     envoy.yaml: |-
       ## refs:
@@ -35,7 +54,7 @@ envoy:
           address:
             socket_address:
               address: 0.0.0.0
-              port_value: 10000
+              port_value: 443
           filter_chains:
           - filters:
             - name: envoy.http_connection_manager
@@ -55,6 +74,13 @@ envoy:
                 stat_prefix: ingress_http
                 http_filters:
                 - name: envoy.router
+            tls_context:
+              common_tls_context:
+                tls_certificates:
+                  - certificate_chain:
+                      filename: "/certs/certificate"
+                    private_key:
+                      filename: "/certs/privateKey"
         clusters:
         - name: service_xds
           connect_timeout: 0.25s
