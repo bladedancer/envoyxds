@@ -91,8 +91,17 @@ func GetListener(id int, domain string) *api.Listener {
 	})
 
 	return &api.Listener{
-		Name:         fmt.Sprintf("listener_%d", id),
-		Address:      &core.Address{},
+		Name: fmt.Sprintf("listener_%d", id),
+		Address: &core.Address{
+			Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: "0.0.0.0",
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: 443,
+					},
+				},
+			},
+		},
 		FilterChains: filterChains,
 	}
 }

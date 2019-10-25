@@ -42,10 +42,10 @@ func pump(snapshotCache cache.SnapshotCache, conf Config) {
 	tick := time.NewTicker(time.Duration(conf.Pump) * time.Second)
 	i := 1
 
-	// listenerConfig := GetListener(0, conf.Domain)
-	// lrs := []cache.Resource{
-	// 	listenerConfig,
-	// }
+	listenerConfig := GetListener(0, conf.Domain)
+	lrs := []cache.Resource{
+		listenerConfig,
+	}
 
 	go func() {
 		for {
@@ -57,7 +57,7 @@ func pump(snapshotCache cache.SnapshotCache, conf Config) {
 				rts := []cache.Resource{
 					routeConfig,
 				}
-				err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, nil))
+				err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, lrs))
 				version++
 				if err != nil {
 					log.Error(err)
