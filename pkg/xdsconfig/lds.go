@@ -1,4 +1,4 @@
-package envoyxds
+package xdsconfig
 
 import (
 	"fmt"
@@ -10,12 +10,19 @@ import (
 	access_config "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
 	access_filter "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
 	http_conn "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 )
 
-// GetListener Get a test listener
-func GetListener(id int, domain string) *api.Listener {
+// GetListenerResources Get the listener configuration data
+func GetListenerResources() []cache.Resource {
+	config := makeListenerConfiguration()
+	resources := []cache.Resource{config}
+	return resources
+}
 
+// GetListener Get a test listener
+func makeListenerConfiguration() *api.Listener {
 	var filterChains []*listener.FilterChain
 
 	accessLogStruct, _ := conversion.MessageToStruct(&access_config.FileAccessLog{
@@ -76,12 +83,12 @@ func GetListener(id int, domain string) *api.Listener {
 					&auth.TlsCertificate{
 						CertificateChain: &core.DataSource{
 							Specifier: &core.DataSource_Filename{
-								Filename: "/certs/certificate",
+								Filename: fmt.Sprintf("%s/certificate", config.CertPath),
 							},
 						},
 						PrivateKey: &core.DataSource{
 							Specifier: &core.DataSource_Filename{
-								Filename: "/certs/privateKey",
+								Filename: fmt.Sprintf("%s/privateKey", config.CertPath),
 							},
 						},
 					},
@@ -91,7 +98,7 @@ func GetListener(id int, domain string) *api.Listener {
 	})
 
 	return &api.Listener{
-		Name: fmt.Sprintf("listener_%d", id),
+		Name: fmt.Sprintf("listener_%d", 42 /*todo*/),
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
