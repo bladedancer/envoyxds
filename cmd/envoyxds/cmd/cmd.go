@@ -9,12 +9,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-const pollInterval = "pollInterval"
-
 // RootCmd configures the command params of the csa
 var RootCmd = &cobra.Command{
-	Use:     "csa",
-	Short:   "The config sync agent synchronizes configuration between Axway SaaS and the remote cluster.",
+	Use:     "xds",
+	Short:   "The XDS configures envoy.",
 	Version: "0.0.1",
 	RunE:    run,
 }
@@ -23,6 +21,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.Flags().Uint32("port", 10000, "The XDS GRPC port.")
 	RootCmd.Flags().String("path", "/", "The path for the config.")
+	RootCmd.Flags().String("certPath", "/certs", "The path for the listener certs.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")
 	RootCmd.Flags().Int("tenants", 10, "The number of tenants.")
@@ -32,6 +31,7 @@ func init() {
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
+	bindOrPanic("certPath", RootCmd.Flags().Lookup("certPath"))
 	bindOrPanic("log.level", RootCmd.Flags().Lookup("logLevel"))
 	bindOrPanic("log.format", RootCmd.Flags().Lookup("logFormat"))
 	bindOrPanic("tenants", RootCmd.Flags().Lookup("tenants"))
@@ -56,6 +56,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := setupLogging(viper.GetString("log.level"), viper.GetString("log.format")); err != nil {
 		return err
 	}
-	config := syncConfigFromViper()
-	return envoyxds.Run(config)
+	setupConfig()
+	return envoyxds.Run()
 }
