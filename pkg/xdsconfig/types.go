@@ -50,26 +50,9 @@ type XDS struct {
 // MakeXDS Helper for creating xds config.
 func MakeXDS(tenants []*Tenant) *XDS {
 	xds := &XDS{
-		LDS: []cache.Resource{},
-		CDS: []cache.Resource{},
-		RDS: []cache.Resource{},
+		LDS: GetListenerResources(),
+		CDS: GetClusterResources(tenants),
+		RDS: GetRouteResources(tenants),
 	}
-
-	xds.LDS = append(
-		xds.LDS,
-		GetListenerResources()...,
-	)
-
-	for _, tenant := range tenants {
-		xds.CDS = append(
-			xds.CDS,
-			GetClusterResources(tenant)...,
-		)
-		xds.RDS = append(
-			xds.RDS,
-			GetRouteResources(tenant)...,
-		)
-	}
-
 	return xds
 }

@@ -9,36 +9,39 @@ import (
 )
 
 // GetRouteResources Get the route configuration data
-func GetRouteResources(tenant *Tenant) []cache.Resource {
-	var resources []cache.Resource
-
-	for _, proxy := range tenant.Proxies {
-		// Create the Routes
-		config := makeRouteConfiguration(tenant.Name, proxy)
-		resource := []cache.Resource{config}
-		resources = append(resources, resource...)
-	}
-
+func GetRouteResources(tenants []*Tenant) []cache.Resource {
+	// Create the Routes
+	config := makeRouteConfiguration(tenants)
+	resources := []cache.Resource{config}
 	return resources
 }
 
 // Create the envoy config for the tenant routes.
-func makeRouteConfiguration(tenantName string, proxy *Proxy) *api.RouteConfiguration {
-	vHosts := makeVHost(tenantName, "test", config.Domain, proxy)
+func makeRouteConfiguration(tenants []*Tenant) *api.RouteConfiguration {
+	var vhosts []*route.VirtualHost
+
+	for _, t := range tenants {
+		vhosts = append(vhosts, makeVHost(t.Name, "test", config.Domain, t.Proxies))
+	}
 	return &api.RouteConfiguration{
 		Name:         "local_route",
-		VirtualHosts: []*route.VirtualHost{vHosts},
+		VirtualHosts: vhosts,
 	}
 }
 
-func makeVHost(tenantName string, env string, domain string, proxy *Proxy) *route.VirtualHost {
-	id := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
+func makeVHost(tenantName string, env string, domain string, proxies []*Proxy) *route.VirtualHost {
+	var routes []*route.Route
+	for _, p := range proxies {
+		routes = append(routes, makeRoutes(tenantName, p)...)
+	}
+
+	id := fmt.Sprintf("t_%s", tenantName)
 	vhost := route.VirtualHost{
 		Name: id,
 		Domains: []string{
 			fmt.Sprintf("%s-%s.%s", env, tenantName, domain),
 		},
-		Routes: makeRoutes(tenantName, proxy),
+		Routes: routes,
 	}
 	return &vhost
 }

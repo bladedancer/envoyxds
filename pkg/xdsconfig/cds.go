@@ -12,14 +12,16 @@ import (
 )
 
 // GetClusterResources Get test Cluster configuration data
-func GetClusterResources(tenant *Tenant) []cache.Resource {
+func GetClusterResources(tenants []*Tenant) []cache.Resource {
 	var resources []cache.Resource
 
-	for _, proxy := range tenant.Proxies {
-		// Create the Routes
-		config := makeCluster(tenant.Name, proxy)
-		resource := []cache.Resource{config}
-		resources = append(resources, resource...)
+	for _, tenant := range tenants {
+		for _, proxy := range tenant.Proxies {
+			// Create the Routes
+			config := makeCluster(tenant.Name, proxy)
+			resource := []cache.Resource{config}
+			resources = append(resources, resource...)
+		}
 	}
 
 	return resources
@@ -27,7 +29,7 @@ func GetClusterResources(tenant *Tenant) []cache.Resource {
 
 // Create a cluster for the proxy
 func makeCluster(tenantName string, proxy *Proxy) *api.Cluster {
-	log.Infof("creating cluster for proxy: %s", proxy.Name)
+	//log.Infof("creating cluster for proxy: %s", proxy.Name)
 	address := &core.Address{Address: &core.Address_SocketAddress{
 		SocketAddress: &core.SocketAddress{
 			Address: proxy.Backend.Host,
