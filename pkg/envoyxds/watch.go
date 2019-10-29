@@ -16,12 +16,14 @@ func loadSnapshot(numTenants int, numRoutes int, domain string, c cache.Snapshot
 		listenerConfig,
 	}
 
+	crs := GetClusterConfigurations()
+
 	routeConfig := GetRouteConfigurations(numTenants, numRoutes, domain)
-	rts := []cache.Resource{
+	rrs := []cache.Resource{
 		routeConfig,
 	}
 	log.Infof("Num Tenants: %d, Num Routes %d, Domain: %s", numTenants, numRoutes, domain)
-	err := c.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, lrs))
+	err := c.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, crs, rrs, lrs))
 	version++
 	if err != nil {
 		log.Error(err)
@@ -57,7 +59,10 @@ func pump(snapshotCache cache.SnapshotCache, conf Config) {
 				rts := []cache.Resource{
 					routeConfig,
 				}
-				err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, nil, rts, lrs))
+
+				crs := GetClusterConfigurations()
+
+				err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(fmt.Sprintf("%d", version), nil, crs, rts, lrs))
 				version++
 				if err != nil {
 					log.Error(err)
