@@ -7,6 +7,7 @@ import (
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -38,13 +39,30 @@ func makeCluster(tenantName string, proxy *Proxy) *api.Cluster {
 			},
 		},
 	}}
+
+	clusterName := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
 	return &api.Cluster{
-		Name:                 fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name),
+		Name:                 clusterName,
 		ConnectTimeout:       ptypes.DurationProto(250 * time.Millisecond),
 		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:      api.Cluster_V4_ONLY,
 		LbPolicy:             api.Cluster_ROUND_ROBIN,
-		Hosts:                []*core.Address{address},
+		LoadAssignment: &api.ClusterLoadAssignment{
+			ClusterName: clusterName,
+			Endpoints: []*endpoint.LocalityLbEndpoints{
+				&endpoint.LocalityLbEndpoints{
+					LbEndpoints: []*endpoint.LbEndpoint{
+						&endpoint.LbEndpoint{
+							HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+								Endpoint: &endpoint.Endpoint{
+									Address: address,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		TlsContext: &auth.UpstreamTlsContext{
 			Sni: proxy.Backend.Host,
 		},
