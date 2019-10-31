@@ -32,5 +32,9 @@ spec:
             value: {{ .Values.xds.domain }}
           - name: XDS_PUMP
             value: "{{ .Values.xds.pumpInterval }}"
+          - name: XDS_DNSREFRESHRATE
+            value: "{{ .Values.xds.dnsRefreshRate }}"
+          - name: XDS_RESPECTDNSTTL
+            value: "{{ .Values.xds.respectDNSTTL }}"
         ports:
         - containerPort: 12000

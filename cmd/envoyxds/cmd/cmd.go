@@ -28,6 +28,8 @@ func init() {
 	RootCmd.Flags().Int("routes", 5, "The number of routes per tenant.")
 	RootCmd.Flags().String("domain", "bladedancer.dynu.net", "The domain for the routes.")
 	RootCmd.Flags().Int64("pump", 0, "If set this adds a new route every N seconds.")
+	RootCmd.Flags().Int64("dnsRefreshRate", 10000, "The DNS refresh rate in ms.")
+	RootCmd.Flags().Bool("respectDNSTTL", false, "Use the TTL from the DNS server - coredns is 30s by default.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
@@ -37,6 +39,8 @@ func init() {
 	bindOrPanic("tenants", RootCmd.Flags().Lookup("tenants"))
 	bindOrPanic("routes", RootCmd.Flags().Lookup("routes"))
 	bindOrPanic("domain", RootCmd.Flags().Lookup("domain"))
+	bindOrPanic("dnsRefreshRate", RootCmd.Flags().Lookup("dnsRefreshRate"))
+	bindOrPanic("respectDNSTTL", RootCmd.Flags().Lookup("respectDNSTTL"))
 }
 
 func initConfig() {

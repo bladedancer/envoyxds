@@ -46,6 +46,8 @@ func makeCluster(tenantName string, proxy *Proxy) *api.Cluster {
 		ConnectTimeout:       ptypes.DurationProto(250 * time.Millisecond),
 		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:      api.Cluster_V4_ONLY,
+		RespectDnsTtl:        config.RespectDNSTTL,
+		DnsRefreshRate:       ptypes.DurationProto(time.Duration(config.DNSRefreshRate) * time.Millisecond),
 		LbPolicy:             api.Cluster_ROUND_ROBIN,
 		LoadAssignment: &api.ClusterLoadAssignment{
 			ClusterName: clusterName,

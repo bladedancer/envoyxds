@@ -6,13 +6,15 @@ import (
 
 // Config defines the configuration needed for Envoy XDS
 type Config struct {
-	Port       uint32
-	Path       string
-	CertPath   string
-	NumTenants int
-	NumRoutes  int
-	Domain     string
-	Pump       int64
+	Port           uint32
+	Path           string
+	CertPath       string
+	NumTenants     int
+	NumRoutes      int
+	Domain         string
+	Pump           int64
+	DNSRefreshRate int64
+	RespectDNSTTL  bool
 }
 
 // Backend The backend service being proxied.
