@@ -14,7 +14,7 @@ func version() string {
 
 func updateSnapshot(snapshotCache cache.SnapshotCache, tenants []*xdsconfig.Tenant) {
 	xds := xdsconfig.MakeXDS(tenants)
-	err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(version(), nil, xds.CDS, xds.RDS, xds.LDS))
+	err := snapshotCache.SetSnapshot("shard-0", cache.NewSnapshot(version(), xds.EDS, xds.CDS, xds.RDS, xds.LDS))
 	if err != nil {
 		log.Error(err)
 	}

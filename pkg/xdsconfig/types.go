@@ -45,6 +45,7 @@ type XDS struct {
 	LDS []cache.Resource
 	CDS []cache.Resource
 	RDS []cache.Resource
+	EDS []cache.Resource
 }
 
 // MakeXDS Helper for creating xds config.
@@ -53,6 +54,7 @@ func MakeXDS(tenants []*Tenant) *XDS {
 		LDS: GetListenerResources(),
 		CDS: GetClusterResources(tenants),
 		RDS: GetRouteResources(tenants),
+		EDS: GetEndpointResources(tenants),
 	}
 	return xds
 }

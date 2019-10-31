@@ -7,7 +7,6 @@ import (
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -30,32 +29,26 @@ func GetClusterResources(tenants []*Tenant) []cache.Resource {
 
 // Create a cluster for the proxy
 func makeCluster(tenantName string, proxy *Proxy) *api.Cluster {
-	//log.Infof("creating cluster for proxy: %s", proxy.Name)
-	address := &core.Address{Address: &core.Address_SocketAddress{
-		SocketAddress: &core.SocketAddress{
-			Address: proxy.Backend.Host,
-			PortSpecifier: &core.SocketAddress_PortValue{
-				PortValue: proxy.Backend.Port,
-			},
-		},
-	}}
-
 	clusterName := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
 	return &api.Cluster{
 		Name:                 clusterName,
 		ConnectTimeout:       ptypes.DurationProto(250 * time.Millisecond),
-		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
+		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_EDS},
 		DnsLookupFamily:      api.Cluster_V4_ONLY,
+		DnsRefreshRate:       ptypes.DurationProto(180 * time.Second),
+		RespectDnsTtl:        true,
 		LbPolicy:             api.Cluster_ROUND_ROBIN,
-		LoadAssignment: &api.ClusterLoadAssignment{
-			ClusterName: clusterName,
-			Endpoints: []*endpoint.LocalityLbEndpoints{
-				&endpoint.LocalityLbEndpoints{
-					LbEndpoints: []*endpoint.LbEndpoint{
-						&endpoint.LbEndpoint{
-							HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-								Endpoint: &endpoint.Endpoint{
-									Address: address,
+		EdsClusterConfig: &api.Cluster_EdsClusterConfig{
+			EdsConfig: &core.ConfigSource{
+				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
+					ApiConfigSource: &core.ApiConfigSource{
+						ApiType: core.ApiConfigSource_GRPC,
+						GrpcServices: []*core.GrpcService{
+							&core.GrpcService{
+								TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+									EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+										ClusterName: "service_xds",
+									},
 								},
 							},
 						},
@@ -63,6 +56,20 @@ func makeCluster(tenantName string, proxy *Proxy) *api.Cluster {
 				},
 			},
 		},
+		// LoadAssignment: &api.ClusterLoadAssignment{
+		// 	ClusterName: clusterName,
+		// 	Endpoints: []*endpoint.LocalityLbEndpoints{
+		// 		&endpoint.LocalityLbEndpoints{
+		// 			LbEndpoints: []*endpoint.LbEndpoint{
+		// 				&endpoint.LbEndpoint{
+		// 					HostIdentifier: &endpoint.LbEndpoint_EndpointName{
+		// 						EndpointName: clusterName,
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 		TlsContext: &auth.UpstreamTlsContext{
 			Sni: proxy.Backend.Host,
 		},
