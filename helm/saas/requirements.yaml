@@ -5,3 +5,6 @@ dependencies:
 - name: front
   version: 1.0.0
   repository: file://./../front
+- name: back
+  version: 1.0.0
+  repository: file://./../back

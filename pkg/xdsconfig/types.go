@@ -15,6 +15,7 @@ type Config struct {
 	Pump           int64
 	DNSRefreshRate int64
 	RespectDNSTTL  bool
+	NumShards      int
 }
 
 // Backend The backend service being proxied.
@@ -50,11 +51,28 @@ type XDS struct {
 }
 
 // MakeXDS Helper for creating xds config.
-func MakeXDS(tenants []*Tenant) *XDS {
-	xds := &XDS{
-		LDS: GetListenerResources(),
-		CDS: GetClusterResources(tenants),
-		RDS: GetRouteResources(tenants),
+func MakeXDS(tenants ...*Tenant) *XDS {
+	var xds XDS
+
+	if tenants != nil {
+		xds = XDS{
+			LDS: GetListenerResources(),
+			CDS: GetClusterResources(tenants),
+			RDS: GetRouteResources(tenants),
+		}
+	} else {
+		xds = XDS{
+			LDS: []cache.Resource{},
+			CDS: []cache.Resource{},
+			RDS: []cache.Resource{},
+		}
 	}
-	return xds
+	return &xds
+}
+
+// Add an XDS to this xds.
+func (xds *XDS) Add(other *XDS) {
+	xds.LDS = append(xds.LDS, other.LDS...)
+	xds.CDS = append(xds.CDS, other.CDS...)
+	xds.RDS = append(xds.RDS, other.RDS...)
 }

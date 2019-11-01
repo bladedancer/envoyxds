@@ -17,6 +17,7 @@ func syncConfigFromViper() xdsconfig.Config {
 		Pump:           viper.GetInt64("pump"),
 		DNSRefreshRate: viper.GetInt64("dnsRefreshRate"),
 		RespectDNSTTL:  viper.GetBool("respectDNSTTL"),
+		NumShards:      viper.GetInt("shards"),
 	}
 }
 

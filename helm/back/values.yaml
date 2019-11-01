@@ -1,99 +1,34 @@
-xds:
-  address: xds
-  port: 9000
-
-replicaCount: 2
-
-podDisruptionBudget: |
-  maxUnavailable: 1
-
-## ref: https://pracucci.com/graceful-shutdown-of-kubernetes-pods.html
-terminationGracePeriodSeconds: 30
-
-strategy: |
-  type: RollingUpdate
-  rollingUpdate:
-    maxSurge: 2
-    maxUnavailable: 1
-
-image:
-  repository: envoyproxy/envoy
-  tag: v1.11.1
-  pullPolicy: IfNotPresent
-
-command:
-  - /usr/local/bin/envoy
-args:
-  - -l
-  - $loglevel
-  - -c
-  - /config/envoy.yaml
-
-service:
-  enabled: true
-  ## Service name is user-configurable for maximum service discovery flexibility.
-  name: backend
-  type: ClusterIP
-  annotations: {}
+envoyss:
+  nameOverride: back
+  xdsService:
+    address: xds
+    port: 9000
+  # args:
+  #   - -l
+  #   - debug
+  #   - -c
+  #   - /config/envoy.yaml
+  secretMounts:
+    certs:
+      mountPath: /certs
+      secretName: default-tls-back
+      defaultMode: 511 # TODO
   ports:
     n0:
-      port: 10000
-      targetPort: n0
+      containerPort: 443
       protocol: TCP
-
-ports:
-  admin:
-    containerPort: 9901
-    protocol: TCP
-  n0:
-    containerPort: 10000
-    protocol: TCP
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-priorityClassName: ""
-
-nodeSelector: {}
-
-tolerations: []
-affinity: {}
-podAnnotations: {}
-podLabels: {}
-
-livenessProbe:
-  tcpSocket:
-    port: admin
-  initialDelaySeconds: 30
-  # periodSeconds: 10
-  # timeoutSeconds: 5
-  # failureThreshold: 3
-  # successThreshold: 1
-
-readinessProbe:
-  tcpSocket:
-    port: admin
-  initialDelaySeconds: 30
-  # periodSeconds: 10
-  # timeoutSeconds: 5
-  # failureThreshold: 3
-  # successThreshold: 1
-
-securityContext: {}
-env: {}
-secretMounts: {}
-
-files:
-    templates:
+  service:
+    name: back
+    type: ClusterIP
+    ports:
+      n0:
+        port: 443
+        protocol: TCP
+    # annotations:
+    #   external-dns.alpha.kubernetes.io/hostname: '*.envoy.six.moloko.apic-k8s.axwaytest.net.'
+    #   service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: Project=apicentral
+    #   service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+  templates:
     envoy.yaml: |-
       admin:
         access_log_path: /dev/stdout
@@ -102,7 +37,7 @@ files:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: "front"
+        id: back-0 # TODO: FROM ENV
         cluster: service_xds
       dynamic_resources:
         lds_config:
@@ -127,45 +62,5 @@ files:
           http2_protocol_options: {}
           hosts:
           - socket_address:
-              address: {{ .Values.xds.address }}
-              port_value: {{ .Values.xds.port }}
-
-
-## ServiceMonitor consumed by prometheus-operator
-serviceMonitor:
-  ## If the operator is installed in your cluster, set to true to create a Service Monitor Entry
-  enabled: false
-  interval: "15s"
-  targetLabels: []
-  podTargetLabels: []
-  ## Namespace in which the service monitor is created
-  # namespace: monitoring
-  # Added to the ServiceMonitor object so that prometheus-operator is able to discover it
-  ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
-  additionalLabels: {}
-
-## PrometheusRule consumed by prometheus-operator
-prometheusRule:
-  enabled: false
-  ## Namespace in which the prometheus rule is created
-  # namespace: monitoring
-  ## Define individual alerting rules as required
-  ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#rulegroup
-  ##      https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-  groups:
-    upstream-rules:
-      enabled: true
-      rules:
-        high4xxRate:
-          enabled: true
-          alert: High4xxRate
-          expr: sum(rate(envoy_cluster_upstream_rq_xx{response_code_class="4"}[1m])) / sum(rate(envoy_cluster_upstream_rq_xx[1m])) * 100 > 1
-          for: 1m
-          labels:
-            severity: page
-          annotations:
-            summary: "4xx response rate above 1%"
-            description: "The 4xx error response rate for envoy cluster {{ $labels.envoy_cluster_name }} reported a service replication success rate of {{ $value }}% for more than 1 minute."
-  ## Added to the PrometheusRule object so that prometheus-operator is able to discover it
-  ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
-  additionalLabels: {}
+              address: {{ .Values.xdsService.address }}
+              port_value: {{ .Values.xdsService.port }}

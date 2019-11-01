@@ -5,5 +5,8 @@ dependencies:
 - name: front
   repository: file://./../front
   version: 1.0.0
-digest: sha256:f0fc067ef5e16461fbe1465212fcc4e82733b38e9256f1bdfdb1898fadd9cd0e
-generated: 2019-10-31T22:57:23.47012794Z
+- name: back
+  repository: file://./../back
+  version: 1.0.0
+digest: sha256:96c609e30b675c0ca0cef35b16b940626d62b8b5abd205138a77f53c9133bdc2
+generated: 2019-11-01T14:12:16.061682111Z

@@ -1,5 +1,6 @@
 envoy:
-  xds:
+  nameOverride: front
+  xdsService:
     address: xds
     port: 9000
   # args:
@@ -10,13 +11,14 @@ envoy:
   secretMounts:
     certs:
       mountPath: /certs
-      secretName: default-tls
+      secretName: default-tls-front
       defaultMode: 511 # TODO
   ports:
     n0:
       containerPort: 443
       protocol: TCP
   service:
+    name: front
     type: LoadBalancer
     ports:
       n0:
@@ -35,7 +37,7 @@ envoy:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: shard-0
+        id: front
         cluster: service_xds
       dynamic_resources:
         lds_config:
@@ -60,5 +62,5 @@ envoy:
           http2_protocol_options: {}
           hosts:
           - socket_address:
-              address: {{ .Values.xds.address }}
-              port_value: {{ .Values.xds.port }}
+              address: {{ .Values.xdsService.address }}
+              port_value: {{ .Values.xdsService.port }}

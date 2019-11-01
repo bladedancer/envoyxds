@@ -1,7 +1,3 @@
-# Axway
-
-Change to a stateful set.
-
 # stable/envoy
 
 [Envoy](https://www.envoyproxy.io/) is an open source edge and service proxy, designed for cloud-native applications.
@@ -40,7 +36,7 @@ Parameter | Description | Default
 `serviceMonitor.interval` | Interval that Prometheus scrapes Envoy metrics | `15s`
 `serviceMonitor.namespace` | Namespace which the operated Prometheus is running in | ``
 `serviceMonitor.additionalLabels` | Labels used by Prometheus Operator to discover your Service Monitor. Set according to your Prometheus setup | `{}`
-`serviceMonitor.targetLabels` |  Labels to transfer from service onto the target | `[]`
+`serviceMonitor.targetLabels` |  Labels to transfer from service onto the target | `[]`    
 `serviceMonitor.podTargetLabels`       | Labels to transfor from pod onto the target         | `[]`
 `prometheusRule.enabled` | If `true`, creates a Prometheus Operator PrometheusRule | `false`
 `prometheusRule.groups` | Prometheus alerting rules | `{}`

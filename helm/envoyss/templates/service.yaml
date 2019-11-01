@@ -13,10 +13,17 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
+  type: {{ .Values.service.type }}
+  {{- if ne .Values.service.loadBalancerIP "" }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
   clusterIP: None
   ports:
   {{- range $key, $value := .Values.service.ports }}
     - name: {{ $key }}
 {{ toYaml $value | indent 6 }}
   {{- end }}
+  selector:
+    app: {{ template "envoy.name" . }}
+    release: {{ .Release.Name }}
 {{- end }}

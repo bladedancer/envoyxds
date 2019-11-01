@@ -54,5 +54,5 @@ echo ======================
 echo ===    Install     ===
 echo ======================
 
-
-helm install --name=xds ./helm
+helm dep update ./helm/saas
+helm install --name=saas ./helm/saas
