@@ -20,9 +20,13 @@ type RoutingShard struct {
 
 // MakeRoutingShard creates an empty shard.
 func MakeRoutingShard(name string) *RoutingShard {
+	routingResources := xdsconfig.MakeXDS()
+	routingResources.LDS = append(routingResources.LDS, xdsconfig.GetListenerResources()...) // TODO separate listener config for front & back
+	routingResources.CDS = append(routingResources.CDS, xdsconfig.GetFrontendClusterResources()...)
+
 	return &RoutingShard{
 		Name:      name,
-		Resources: xdsconfig.MakeXDS(),
+		Resources: routingResources,
 	}
 }
 

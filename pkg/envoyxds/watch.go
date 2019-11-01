@@ -27,7 +27,7 @@ func updateShard(snapshotCache cache.SnapshotCache, shard Shard) error {
 }
 
 func updateRoutingShard(snapshotCache cache.SnapshotCache) {
-	// TODO Create config for front
+	routingShard = MakeRoutingShard("front")
 	updateShard(snapshotCache, routingShard)
 }
 
@@ -44,8 +44,7 @@ func updateTenantShards(snapshotCache cache.SnapshotCache, tenants []*xdsconfig.
 }
 
 func watch(snapshotCache cache.SnapshotCache) {
-	routingShard = MakeRoutingShard("front")  // The node id of the envoys in the frontend
-	tenantCluster = MakeTenantCluster("back") // The base name of the envoys statefulset
+	tenantCluster = MakeTenantCluster("shard") // The base name of the envoys statefulset
 
 	tenants, updateChan := getTenants()
 	updateRoutingShard(snapshotCache)

@@ -1,4 +1,5 @@
 envoy:
+  fullnameOverride: front
   nameOverride: front
   xdsService:
     address: xds

@@ -36,5 +36,7 @@ spec:
             value: "{{ .Values.xds.dnsRefreshRate }}"
           - name: XDS_RESPECTDNSTTL
             value: "{{ .Values.xds.respectDNSTTL }}"
+          - name: XDS_SHARDS
+            value: "{{ .Values.xds.shards }}"
         ports:
         - containerPort: 12000

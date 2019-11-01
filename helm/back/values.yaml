@@ -1,4 +1,5 @@
 envoyss:
+  fullnameOverride: back
   nameOverride: back
   xdsService:
     address: xds
@@ -15,7 +16,7 @@ envoyss:
       defaultMode: 511 # TODO
   ports:
     n0:
-      containerPort: 443
+      containerPort: 443 # probably don't need tls here.
       protocol: TCP
   service:
     name: back
@@ -24,10 +25,6 @@ envoyss:
       n0:
         port: 443
         protocol: TCP
-    # annotations:
-    #   external-dns.alpha.kubernetes.io/hostname: '*.envoy.six.moloko.apic-k8s.axwaytest.net.'
-    #   service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: Project=apicentral
-    #   service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
   templates:
     envoy.yaml: |-
       admin:
@@ -37,7 +34,7 @@ envoyss:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: back-0 # TODO: FROM ENV
+        id: shard-0 # TODO: FROM ENV
         cluster: service_xds
       dynamic_resources:
         lds_config:
