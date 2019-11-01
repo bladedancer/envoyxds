@@ -23,6 +23,7 @@ func MakeRoutingShard(name string) *RoutingShard {
 	routingResources := xdsconfig.MakeXDS()
 	routingResources.LDS = append(routingResources.LDS, xdsconfig.GetListenerResources()...) // TODO separate listener config for front & back
 	routingResources.CDS = append(routingResources.CDS, xdsconfig.GetFrontendClusterResources()...)
+	routingResources.RDS = append(routingResources.RDS, xdsconfig.GetFrontendRouteResources()...)
 
 	return &RoutingShard{
 		Name:      name,

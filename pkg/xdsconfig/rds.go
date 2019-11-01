@@ -8,6 +8,41 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 )
 
+// GetFrontendRouteResources Get the frontend route configuration data
+func GetFrontendRouteResources() []cache.Resource {
+	// At the moment this uses clusterheader to decide and has no 
+	// business logic. The listener should have a filter configured
+	// to decide the correct shard and then route based on that.
+	config := &api.RouteConfiguration{
+		Name:         "local_route",
+		VirtualHosts: []*route.VirtualHost{
+			&route.VirtualHost{
+				Name: "front",
+				Domains: []string{"*"},
+				Routes: []*route.Route{
+					&route.Route{
+						Name: "front",
+						Match: &route.RouteMatch{
+							PathSpecifier: &route.RouteMatch_Path{
+								Path: "/",
+							},
+						},
+						Action: &route.Route_Route{
+							Route: &route.RouteAction{
+								ClusterSpecifier: &route.RouteAction_ClusterHeader{
+									ClusterHeader: "x-shard", // TODO
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	resources := []cache.Resource{config}
+	return resources
+}
+
 // GetRouteResources Get the route configuration data
 func GetRouteResources(tenants []*Tenant) []cache.Resource {
 	// Create the Routes
