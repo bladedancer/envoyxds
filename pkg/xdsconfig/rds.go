@@ -23,8 +23,8 @@ func GetFrontendRouteResources() []cache.Resource {
 					&route.Route{
 						Name: "front",
 						Match: &route.RouteMatch{
-							PathSpecifier: &route.RouteMatch_Path{
-								Path: "/",
+							PathSpecifier: &route.RouteMatch_Prefix{
+								Prefix: "/",
 							},
 						},
 						Action: &route.Route_Route{
