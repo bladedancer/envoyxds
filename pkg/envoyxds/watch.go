@@ -44,8 +44,8 @@ func updateTenantShards(snapshotCache cache.SnapshotCache, tenants []*xdsconfig.
 }
 
 func watch(snapshotCache cache.SnapshotCache) {
-	routingShard = MakeRoutingShard("front")   // The node id of the envoys in the frontend
-	tenantCluster = MakeTenantCluster("shard") // The base name of the envoys statefulset
+	routingShard = MakeRoutingShard("front")  // The node id of the envoys in the frontend
+	tenantCluster = MakeTenantCluster("back") // The base name of the envoys statefulset
 
 	tenants, updateChan := getTenants()
 	updateRoutingShard(snapshotCache)
