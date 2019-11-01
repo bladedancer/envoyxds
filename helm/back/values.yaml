@@ -4,11 +4,11 @@ envoyss:
   xdsService:
     address: xds
     port: 9000
-  # args:
-  #   - -l
-  #   - debug
-  #   - -c
-  #   - /config/envoy.yaml
+  args:
+    - -l
+    - info
+    - -c
+    - /env-config/envoy.yaml
   secretMounts:
     certs:
       mountPath: /certs
@@ -18,6 +18,24 @@ envoyss:
     n0:
       containerPort: 443 # probably don't need tls here.
       protocol: TCP
+
+  # Need to inject the ordinal
+  initContainersTemplate: |-
+    - name: init-back
+      image: bhgedigital/envsubst
+      command: [ "sh", "-c", "envsubst < /config/envoy.yaml > /env-config/envoy.yaml"]
+      volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: env-config
+          mountPath: /env-config
+  volumes:
+  - name: env-config
+    emptyDir: {}
+  volumeMounts:
+  - name: env-config
+    mountPath: /env-config
+
   service:
     name: back
     type: ClusterIP
@@ -34,7 +52,7 @@ envoyss:
             address: 0.0.0.0
             port_value: 9901
       node:
-        id: shard-0 # TODO: FROM ENV
+        id: ${HOSTNAME}
         cluster: service_xds
       dynamic_resources:
         lds_config:
