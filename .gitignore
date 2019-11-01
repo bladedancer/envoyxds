@@ -3,3 +3,4 @@
 vendor
 bin
 rbac.config
+saas/charts/*.tgz

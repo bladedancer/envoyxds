@@ -1,0 +1,9 @@
+dependencies:
+- name: xds
+  repository: file://./../xds
+  version: 1.0.0
+- name: front
+  repository: file://./../front
+  version: 1.0.0
+digest: sha256:f0fc067ef5e16461fbe1465212fcc4e82733b38e9256f1bdfdb1898fadd9cd0e
+generated: 2019-10-31T22:57:23.47012794Z
