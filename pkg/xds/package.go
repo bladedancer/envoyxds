@@ -1,4 +1,4 @@
-package xdsconfig
+package xds
 
 import (
 	"github.com/bladedancer/envoyxds/pkg/base"
@@ -10,6 +10,6 @@ var config *base.Config
 
 // Init Probably a nicer way to do this but for now it's good enough
 func Init() {
-	log = base.GetLog("backend")
+	log = base.GetLog("xds")
 	config = base.GetConfig()
 }

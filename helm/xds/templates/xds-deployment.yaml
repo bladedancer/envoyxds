@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xds
+  namespace: {{.Release.Namespace}}
+  labels:
+    app: {{ .Chart.Name }}-xds
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-xds
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-xds
+    spec:
+      containers:
+      - name: xds
+        image: bladedancer/envoyxds:latest
+        env:
+          - name: XDS_PORT
+            value: "12000"
+          - name: XDS_TENANTS
+            value: "{{ .Values.xds.tenants }}"
+          - name: XDS_ROUTES
+            value: "{{ .Values.xds.routes }}"
+          - name: XDS_DOMAIN
+            value: {{ .Values.xds.domain }}
+          - name: XDS_PUMP
+            value: "{{ .Values.xds.pumpInterval }}"
+          - name: XDS_DNSREFRESHRATE
+            value: "{{ .Values.xds.dnsRefreshRate }}"
+          - name: XDS_RESPECTDNSTTL
+            value: "{{ .Values.xds.respectDNSTTL }}"
+          - name: XDS_SHARDS
+            value: "{{ .Values.xds.shards }}"
+        ports:
+        - containerPort: 12000

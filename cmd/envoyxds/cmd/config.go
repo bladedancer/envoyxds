@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"github.com/bladedancer/envoyxds/pkg/envoyxds"
-	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
+	"github.com/bladedancer/envoyxds/pkg/base"
 	"github.com/spf13/viper"
 )
 
-func syncConfigFromViper() xdsconfig.Config {
-	return xdsconfig.Config{
+func syncConfigFromViper() base.Config {
+	return base.Config{
 		Port:           viper.GetUint32("port"),
 		Path:           viper.GetString("path"),
 		CertPath:       viper.GetString("certPath"),
@@ -17,12 +16,12 @@ func syncConfigFromViper() xdsconfig.Config {
 		Pump:           viper.GetInt64("pump"),
 		DNSRefreshRate: viper.GetInt64("dnsRefreshRate"),
 		RespectDNSTTL:  viper.GetBool("respectDNSTTL"),
+		NumShards:      viper.GetInt("shards"),
 	}
 }
 
 func setupConfig() {
 	config := syncConfigFromViper()
 	log.Printf("Config: %+v", config)
-	envoyxds.SetConfig(&config)
-	xdsconfig.SetConfig(&config)
+	base.SetConfig(&config)
 }

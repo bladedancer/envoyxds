@@ -3,7 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/bladedancer/envoyxds/pkg/envoyxds"
+	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/bladedancer/envoyxds/pkg/xds"
+	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -30,6 +32,7 @@ func init() {
 	RootCmd.Flags().Int64("pump", 0, "If set this adds a new route every N seconds.")
 	RootCmd.Flags().Int64("dnsRefreshRate", 10000, "The DNS refresh rate in ms.")
 	RootCmd.Flags().Bool("respectDNSTTL", false, "Use the TTL from the DNS server - coredns is 30s by default.")
+	RootCmd.Flags().Int("shards", 3, "The number of backend envoys.") // We should be querying this dynamically from k8s
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
@@ -41,6 +44,7 @@ func init() {
 	bindOrPanic("domain", RootCmd.Flags().Lookup("domain"))
 	bindOrPanic("dnsRefreshRate", RootCmd.Flags().Lookup("dnsRefreshRate"))
 	bindOrPanic("respectDNSTTL", RootCmd.Flags().Lookup("respectDNSTTL"))
+	bindOrPanic("shards", RootCmd.Flags().Lookup("shards"))
 }
 
 func initConfig() {
@@ -61,5 +65,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	setupConfig()
-	return envoyxds.Run()
+	apimgmt.Init()
+	xdsconfig.Init()
+	xds.Init()
+	return xds.Run()
 }

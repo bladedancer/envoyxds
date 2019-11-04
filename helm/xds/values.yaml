@@ -1,0 +1,11 @@
+xds:
+  address: xds
+  port: 9000
+  tenants: 20
+  routes: 100
+  pumpInterval: 0
+  domain: "bladedancer.dynu.net"
+  dnsRefreshRate: 300000 # 300s
+  respectDNSTTL: false # CoreDNS is too low
+  shards: 2
+

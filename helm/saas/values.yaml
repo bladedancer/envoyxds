@@ -1,0 +1,8 @@
+xds:
+  xds:
+    tenants: 20
+    routes: 100
+    pumpInterval: 0
+    domain: "bladedancer.dynu.net"
+    shards: 2
+

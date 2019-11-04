@@ -4,8 +4,7 @@ import (
 	"errors"
 	"time"
 
-    "github.com/bladedancer/envoyxds/pkg/envoyxds"
-    "github.com/bladedancer/envoyxds/pkg/xdsconfig"
+	"github.com/bladedancer/envoyxds/pkg/base"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,8 +47,7 @@ func setupLogging(level string, format string) error {
 
 	log = logger.WithField(logPackage, "cmd")
 
-	envoyxds.SetLog(logger.WithField(logPackage, "envoyxds"))
-	xdsconfig.SetLog(logger.WithField(logPackage, "envoyxds"))
+	base.SetLog(logger)
 
 	return nil
 }

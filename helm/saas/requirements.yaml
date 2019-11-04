@@ -1,0 +1,10 @@
+dependencies:
+- name: xds
+  version: 1.0.0
+  repository: file://./../xds
+- name: front
+  version: 1.0.0
+  repository: file://./../front
+- name: back
+  version: 1.0.0
+  repository: file://./../back
