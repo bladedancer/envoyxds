@@ -10,7 +10,7 @@ import (
 )
 
 var frontend *xdsconfig.FrontendShard
-var backends []*xdsconfig.BackendShard
+var deploymentManager = MakeDeploymentManager()
 
 func version() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano()) // good enough for now
@@ -28,25 +28,27 @@ func updateShard(snapshotCache cache.SnapshotCache, shard xdsconfig.Shard) error
 	return err
 }
 
-func updateBackends(snapshotCache cache.SnapshotCache) {
-	for _, shard := range backends {
-		updateShard(snapshotCache, shard)
-	}
-}
-
 func watch(snapshotCache cache.SnapshotCache) {
-	tenants, updateChan := apimgmt.GetTenants()
-
-	backends = toShards(tenants...)
+	// Frontend is static for now
 	frontend = xdsconfig.MakeFrontendShard("front")
-
-	updateBackends(snapshotCache)
 	updateShard(snapshotCache, frontend)
 
+	// Tenants and shard contents are dynamic so listen for
+	// changes and update accordingly
 	go func() {
-		for tenants := range updateChan {
-			backends = toShards(tenants...)
-			updateBackends(snapshotCache)
+		for shards := range deploymentManager.OnChange {
+			for i := 0; i < len(shards); i++ {
+				updateShard(snapshotCache, shards[i])
+			}
 		}
 	}()
+
+	tenants, updateChan := apimgmt.GetTenants()
+	go func() {
+		for tenants := range updateChan {
+			deploymentManager.AddTenants(tenants...)
+		}
+	}()
+
+	deploymentManager.AddTenants(tenants...)
 }

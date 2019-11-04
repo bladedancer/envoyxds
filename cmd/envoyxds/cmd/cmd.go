@@ -45,6 +45,7 @@ func init() {
 	bindOrPanic("dnsRefreshRate", RootCmd.Flags().Lookup("dnsRefreshRate"))
 	bindOrPanic("respectDNSTTL", RootCmd.Flags().Lookup("respectDNSTTL"))
 	bindOrPanic("shards", RootCmd.Flags().Lookup("shards"))
+	bindOrPanic("pump", RootCmd.Flags().Lookup("pump"))
 }
 
 func initConfig() {
