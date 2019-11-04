@@ -6,7 +6,7 @@ envoyss:
     port: 9000
   args:
     - -l
-    - trace
+    - info
     - -c
     - /env-config/envoy.yaml
   secretMounts:
