@@ -18,6 +18,16 @@ envoy:
     n0:
       containerPort: 443
       protocol: TCP
+
+  # Need to inject the ordinal
+  initContainersTemplate: |-
+    - name: wait-for-back
+      image: byrnedo/alpine-curl
+      command:
+      - sh
+      - "-c"
+      - "until $(curl --output /dev/null --silent --head --fail http://back-0.back:9901/ready); do echo \"waiting for back-0\"; sleep 2;done;"
+
   service:
     name: front
     type: LoadBalancer
