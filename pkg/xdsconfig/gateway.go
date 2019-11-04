@@ -10,15 +10,19 @@ import (
 	access_config "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
 	access_filter "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
 	http_conn "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 )
 
-// GetListenerResources Get the listener configuration data
-func GetListenerResources() []cache.Resource {
-	config := makeListenerConfiguration()
-	resources := []cache.Resource{config}
-	return resources
+// Gateway The proxy gateway.
+type Gateway struct {
+	Listener *api.Listener
+}
+
+// MakeGateway creates a gateway instance for this node.
+func MakeGateway() *Gateway {
+	return &Gateway{
+		Listener: makeListenerConfiguration(),
+	}
 }
 
 // GetListener Get a test listener

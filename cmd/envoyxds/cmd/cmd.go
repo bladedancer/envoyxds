@@ -3,7 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/bladedancer/envoyxds/pkg/envoyxds"
+	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/bladedancer/envoyxds/pkg/xds"
+	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -63,5 +65,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	setupConfig()
-	return envoyxds.Run()
+	apimgmt.Init()
+	xdsconfig.Init()
+	xds.Init()
+	return xds.Run()
 }

@@ -1,15 +1,13 @@
-package envoyxds
+package apimgmt
 
 import (
 	"fmt"
 	"time"
-
-	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 )
 
-// GetTenantConfig Poll the data source to get teh tenant info.
-func getTenants() ([]*xdsconfig.Tenant, chan []*xdsconfig.Tenant) {
-	updateChan := make(chan []*xdsconfig.Tenant)
+// GetTenants Get the tenant data and a channel hat is updated on change
+func GetTenants() ([]*Tenant, chan []*Tenant) {
+	updateChan := make(chan []*Tenant)
 	tenants := generateTenants(config.NumTenants)
 
 	// Hack in a special case where the cache keeps growing
@@ -20,7 +18,7 @@ func getTenants() ([]*xdsconfig.Tenant, chan []*xdsconfig.Tenant) {
 	return tenants, updateChan
 }
 
-func pump(updateChan chan []*xdsconfig.Tenant) {
+func pump(updateChan chan []*Tenant) {
 	log.Infof("Pumping new route every %d seconds", config.Pump)
 	tick := time.NewTicker(time.Duration(config.Pump) * time.Second)
 	i := 1
@@ -38,26 +36,26 @@ func pump(updateChan chan []*xdsconfig.Tenant) {
 	}()
 }
 
-func generateTenants(count int) []*xdsconfig.Tenant {
-	var tenants []*xdsconfig.Tenant
+func generateTenants(count int) []*Tenant {
+	var tenants []*Tenant
 	for i := 0; i < count; i++ {
 		tenants = append(tenants, generateTenant(i))
 	}
 	return tenants
 }
 
-func generateTenant(id int) *xdsconfig.Tenant {
-	var proxies []*xdsconfig.Proxy
+func generateTenant(id int) *Tenant {
+	var proxies []*Proxy
 
 	for i := 0; i < config.NumRoutes; i++ {
 		proxies = append(
 			proxies,
-			&xdsconfig.Proxy{
+			&Proxy{
 				Name: fmt.Sprintf("%d-google-%d", id, i),
-				Frontend: &xdsconfig.Frontend{
+				Frontend: &Frontend{
 					BasePath: fmt.Sprintf("/route-%d", i),
 				},
-				Backend: &xdsconfig.Backend{
+				Backend: &Backend{
 					Host: "www.google.com",
 					Port: 443,
 					Path: "/",
@@ -65,7 +63,7 @@ func generateTenant(id int) *xdsconfig.Tenant {
 			},
 		)
 	}
-	return &xdsconfig.Tenant{
+	return &Tenant{
 		Name:    fmt.Sprintf("%d", id),
 		Proxies: proxies,
 	}

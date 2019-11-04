@@ -1,4 +1,4 @@
-package envoyxds
+package xds
 
 import (
 	"context"

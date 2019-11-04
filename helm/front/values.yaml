@@ -4,11 +4,11 @@ envoy:
   xdsService:
     address: xds
     port: 9000
-  # args:
-  #   - -l
-  #   - debug
-  #   - -c
-  #   - /config/envoy.yaml
+  args:
+    - -l
+    - trace
+    - -c
+    - /config/envoy.yaml
   secretMounts:
     certs:
       mountPath: /certs
@@ -59,6 +59,7 @@ envoy:
           connect_timeout: 0.25s
           type: LOGICAL_DNS
           dns_lookup_family: V4_ONLY
+          dns_refresh_rate: "30s"
           lb_policy: ROUND_ROBIN
           http2_protocol_options: {}
           hosts:
