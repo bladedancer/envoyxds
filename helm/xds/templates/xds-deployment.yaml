@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
       - name: xds
-        image: bladedancer/envoyxds:latest
+        image: {{ .Values.xds.repo }}/envoyxds:latest
+        pullPolicy: IfNotPresent
         env:
           - name: XDS_PORT
             value: "12000"

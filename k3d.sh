@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+REPO=${REGISTRY:-bladedancer}
+echo "using $REPO for image pull "
 echo ======================
 echo === Create Cluster ===
 echo ======================
@@ -42,7 +44,7 @@ echo === Install Images ===
 echo ======================
 
 #docker pull bladedancer/envoyxds:latest
-k3d i --name=xds  bladedancer/envoyxds:latest
+k3d i --name=xds  $REPO/envoyxds:latest
 
 echo ======================
 echo ===    Wait     ===
