@@ -125,8 +125,20 @@ func getLuaFunc() string {
     //TODO Add Service Callout
     return string([]byte(` 
     function envoy_on_request(request_handle)
-      request_handle:logInfo("Adding Shard via Lua")
-      request_handle:headers():add("x-shard", "back-0")
+       for key, value in pairs(request_handle:headers()) do
+          request_handle:logInfo(key .. ": " .. value)
+       end
+       local headers, body = request_handle:httpCall(
+         "service_xds_shard",
+         {
+          [":method"] = "GET",
+          [":path"] = "/shard",
+          [":authority"] = "service_xds_shard"
+        },
+        request_handle:headers():get(":authority"),
+        5000)
+      request_handle:logInfo("Adding Shard via Lua " .. body)
+      request_handle:headers():add("x-shard", body)
     end`))
 }
 func getLuaFilter() *http_conn.HttpFilter_Config {
