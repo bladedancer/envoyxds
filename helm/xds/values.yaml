@@ -1,6 +1,7 @@
 xds:
   address: xds
   port: 9000
+  shardPort: 9005
   tenants: 20
   routes: 100
   pumpInterval: 0

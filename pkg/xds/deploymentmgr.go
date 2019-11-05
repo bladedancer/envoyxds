@@ -34,7 +34,12 @@ func MakeDeploymentManager() *DeploymentManager {
 
 // GetShardName gets the shard that the tenant is deployed on
 func (dm *DeploymentManager) GetShardName(tenantName string) string {
-	return dm.byTenantName[tenantName].shardName
+    dep:=dm.byTenantName[tenantName]
+    shard:=""
+    if dep!= nil{
+        shard=dep.shardName
+    }
+    return shard
 }
 
 // GetShard return the named shard.

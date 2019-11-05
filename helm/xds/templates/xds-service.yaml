@@ -16,3 +16,7 @@ spec:
     protocol: TCP
     port: {{ .Values.xds.port }}
     targetPort: 12000
+  - name: grpc-xds-shard
+    protocol: TCP
+    port: {{ .Values.xds.shardPort }}
+    targetPort: 12001
