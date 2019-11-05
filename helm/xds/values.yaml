@@ -7,5 +7,6 @@ xds:
   domain: "bladedancer.dynu.net"
   dnsRefreshRate: 300000 # 300s
   respectDNSTTL: false # CoreDNS is too low
+  repo: chrisccoy
   shards: 2
 

@@ -13,8 +13,21 @@ import (
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+    "net/http"
 )
+//TODO - Simple Entry Point Needs to be refactored
+func runTempService() {
 
+    http.HandleFunc("/shard",
+        func (w http.ResponseWriter, r *http.Request) {
+            shard:=0
+            fmt.Fprintf(w, "%d", shard)
+    },
+    )
+    go http.ListenAndServe(":12001", nil)
+    log.Info("Simple Service Started")
+
+}
 // Run entry point for Envoy XDS command line.
 func Run() error {
 	callbacks := Calls{}
@@ -27,6 +40,8 @@ func Run() error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("Starting Simple Service...")
+	runTempService()
 
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
 	api.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
