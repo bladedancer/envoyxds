@@ -41,3 +41,6 @@ spec:
             value: "{{ .Values.xds.shards }}"
         ports:
         - containerPort: 12000
+          name: xds
+        - containerPort: 12001
+          name: shard
