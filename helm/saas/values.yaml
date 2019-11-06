@@ -1,8 +1,21 @@
 xds:
   xds:
-    tenants: 20
-    routes: 100
-    pumpInterval: 0
-    domain: "bladedancer.dynu.net"
-    shards: 2
+    tenants: 20                   # initial number of tenants
+    routes: 10                    # number of APIs per tenant
+    pumpInterval: 0               # a new tenant is added every n seconds. Set to 0 to disable.
+    domain: bladedancer.dynu.net  # change to your domain
+    shards: 3                     # must match replicaCount
+    repo:                         # Where to pull from
+back:
+  envoyss:
+    replicaCount: 3 # must match shards
+    strategy: |
+      type: RollingUpdate
 
+front:
+  envoy:
+    service:
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: '*.gm-envoy.moloko.apic-k8s.axwaytest.net.'
+        service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: Project=apicentral
+        service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
