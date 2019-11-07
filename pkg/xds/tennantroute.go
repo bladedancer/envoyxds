@@ -7,6 +7,7 @@ import (
     "strings"
     "github.com/bladedancer/envoyxds/pkg/xdsconfig"
     "github.com/bladedancer/envoyxds/pkg/apimgmt"
+    "time"
 )
 
 //TODO - Simple Entry Point Needs to be refactored
@@ -64,6 +65,8 @@ func confirmOrMakeRoute(shard string, t *xdsconfig.Tenant, path string) {
         prox:=xdsconfig.MakeProxy(t.Name, apimgmt.MakeProxy(t.Name, path))
         t.Proxies = append(t.Proxies, prox)
         deploymentManager.OnChange <- ([]*xdsconfig.BackendShard{deploymentManager.shards[shard]})
+        //TODO add some channel synchronization with a countdown latch
+        time.Sleep(500 * time.Millisecond)
 
     }
 }
