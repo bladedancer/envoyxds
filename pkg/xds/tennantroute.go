@@ -1,14 +1,13 @@
 package xds
 
 import (
-	"bytes"
-	"fmt"
-	"net/http"
-
-	//    "regexp"
-	"strings"
-
-	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+    "net/http"
+    "fmt"
+    "bytes"
+    "strings"
+    "github.com/bladedancer/envoyxds/pkg/xdsconfig"
+    "github.com/bladedancer/envoyxds/pkg/apimgmt"
+    "time"
 )
 
 //TODO - Simple Entry Point Needs to be refactored
@@ -25,55 +24,76 @@ func GetTennantRouter() *TennantRouter {
 //Run Start the service
 func (t *TennantRouter) Run() {
 
-	http.HandleFunc("/shard",
-		func(w http.ResponseWriter, r *http.Request) {
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(r.Body)
-			newStr := buf.String()
-			log.Infof("Received %s", newStr)
-			fmt.Fprintf(w, "%s", getSafeShard(newStr))
-		},
-	)
-	go http.ListenAndServe(":12001", nil)
-	log.Info("Simple Service Started")
+    http.HandleFunc("/shard",
+        func (w http.ResponseWriter, r *http.Request) {
+            buf := new(bytes.Buffer)
+            buf.ReadFrom(r.Body)
+            log.Infof("Received %s", buf.String())
+            toks:=strings.Split(buf.String(),":")
+            fmt.Fprintf(w, "%s", getSafeShard(toks[0], toks[1]))
+
+        },
+    )
+    go http.ListenAndServe(":12001", nil)
+    log.Info("Simple Service Started")
 }
+//getSafeShard -
+func getSafeShard(host string, path string) string {
+    tenant:=extractTenant(host)
+    shard:=deploymentManager.GetShardName(tenant)
+    s:=deploymentManager.shards[shard]
+    if s==nil {
+        // Edge case for unknown tennat request
+        // Should not occur, but will result in 404
+        log.Warnf("shard should not be nil  %s", shard)
+        return "back-0"
+    }
+    ten:=getTenantFromShard(s, tenant)
+    confirmOrMakeRoute(shard, ten, path)
+    return shard
 
-//getSafeShard - expecting something like this test-12.bladedancer.dynu.net
-func getSafeShard(tennant string) string {
-	s := strings.Split(tennant, "-")
-	shard := "back-0"
-	// re := regexp.MustCompile(`\-(.*?)\.`)
-	// something like this ^^ might be better
-	if len(s) > 1 {
-		s = strings.Split(s[1], ".")
-		if len(s) > 0 {
-			log.Infof("Looking for shard for %s", s[0])
-			shard = deploymentManager.GetShardName(s[0])
+}
+func confirmOrMakeRoute(shard string, t *xdsconfig.Tenant, path string) {
+    found:=false
+    for _, p := range t.Proxies {
+        if p.Route.Match.GetPath()==path {
 
-			if shard == "" && strings.HasPrefix(s[0], "new") {
-				// If the tenant wasn't deployed we'd try load it.
-				tenantToDeploy := &apimgmt.Tenant{
-					Name: s[0],
-					Proxies: []*apimgmt.Proxy{
-						&apimgmt.Proxy{
-							Name: fmt.Sprintf("%s-axway"),
-							Frontend: &apimgmt.Frontend{
-								BasePath: "/route-0",
-							},
-							Backend: &apimgmt.Backend{
-								Host: "www.axway.com",
-								Port: 443,
-								Path: "/en",
-							},
-						},
-					},
-				}
-				deploymentManager.AddTenants(tenantToDeploy)
-				shard = deploymentManager.GetShardName(tenantToDeploy.Name)
-			}
-			log.Infof("Found a good shard %s", shard)
-		}
-	}
-	return shard
+            found=true
+            break;
+        }
+    }
+    if !found {
 
+        path=strings.TrimPrefix(path,"/")
+        prox:=xdsconfig.MakeProxy(t.Name, apimgmt.MakeProxy(t.Name, path))
+        t.Proxies = append(t.Proxies, prox)
+        deploymentManager.OnChange <- ([]*xdsconfig.BackendShard{deploymentManager.shards[shard]})
+        //TODO add some channel synchronization with a countdown latch
+        time.Sleep(500 * time.Millisecond)
+
+    }
+}
+// getTenantFromShard - Assumes tenant/shard affinity
+func getTenantFromShard(shard *xdsconfig.BackendShard, tName string ) *xdsconfig.Tenant{
+    var res *xdsconfig.Tenant
+    for _, tenant := range shard.Tenants {
+        if tenant.Name==tName {
+            res=tenant
+        }
+    }
+    return res
+}
+//extractTenant = expecting something like this test-12.bladedancer.dynu.net, will return 12
+func extractTenant(host string) string {
+    tenant:=""
+    s := strings.Split(host, "-")
+    // re := regexp.MustCompile(`\-(.*?)\.`)
+    // something like this ^^ might be better
+    if len(s) > 1 {
+        s = strings.Split(s[1], ".")
+        if len(s) > 0 {
+           tenant=s[0]
+        }
+    }
+    return tenant
 }

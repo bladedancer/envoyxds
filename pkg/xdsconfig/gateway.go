@@ -146,7 +146,7 @@ func getLuaFunc() string {
           [":path"] = "/shard",
           [":authority"] = "service_xds_shard"
         },
-        request_handle:headers():get(":authority"),
+        request_handle:headers():get(":authority") .. ":" .. request_handle:headers():get(":path") ,
         5000)
       request_handle:logInfo("Adding Shard via Lua " .. body)
       request_handle:headers():add("x-shard", body)
