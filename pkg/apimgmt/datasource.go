@@ -75,17 +75,19 @@ func generateTenant(id int) *Tenant {
 		Proxies: proxies,
 	}
 }
+
 //MakeProxy - Throw away for POC to see how dynamic route might work
-func MakeProxy(id string,  path string) *Proxy {
-    return &Proxy{
-        Name: fmt.Sprintf("%s-google-%s", id, path),
-        Frontend: &Frontend{
-            BasePath: fmt.Sprintf("/%s", path),
-        },
-        Backend: &Backend{
-            Host: "www.google.com",
-            Port: 443,
-            Path: "/",
-        },
-    }
+func MakeProxy(id string, path string) *Proxy {
+	return &Proxy{
+		Name: fmt.Sprintf("%s-google-%s", id, path),
+		Frontend: &Frontend{
+			BasePath: fmt.Sprintf("/%s", path),
+		},
+		Backend: &Backend{
+			Host: "www.google.com",
+			Port: 443,
+			Path: "/",
+			TLS:  true,
+		},
+	}
 }
