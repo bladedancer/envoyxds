@@ -43,7 +43,10 @@ func getSafeShard(host string, path string) string {
     shard:=deploymentManager.GetShardName(tenant)
     s:=deploymentManager.shards[shard]
     if s==nil {
+        // Edge case for unknown tennat request
+        // Should not occur, but will result in 404
         log.Warnf("shard should not be nil  %s", shard)
+        return "back-0"
     }
     ten:=getTenantFromShard(s, tenant)
     confirmOrMakeRoute(shard, ten, path)
