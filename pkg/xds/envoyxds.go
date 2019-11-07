@@ -15,10 +15,12 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+
+
 // Run entry point for Envoy XDS command line.
 func Run() error {
-	callbacks := Calls{}
 
+    callbacks:= Calls{}
 	snapshotCache := cache.NewSnapshotCache(false, cache.IDHash{}, nil)
 	server := xds.NewServer(snapshotCache, callbacks)
 	grpcServer := grpc.NewServer()

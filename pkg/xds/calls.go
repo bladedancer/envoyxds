@@ -7,8 +7,7 @@ import (
 )
 
 // Calls The XDS callbacks.
-type Calls struct {
-}
+type Calls struct {}
 
 // OnStreamOpen is called once an xDS stream is open with a stream ID and the type URL (or "" for ADS).
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
@@ -24,14 +23,14 @@ func (c Calls) OnStreamClosed(int64) {
 
 // OnStreamRequest is called once a request is received on a stream.
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
-func (c Calls) OnStreamRequest(int64, *v2.DiscoveryRequest) error {
-	log.Info("OnStreamRequest")
+func (c Calls) OnStreamRequest(id int64, req *v2.DiscoveryRequest) error {
+	log.Infof("OnStreamRequest id:%d %v", id, req.ResourceNames)
 	return nil
 }
 
 // OnStreamResponse is called immediately prior to sending a response on a stream.
-func (c Calls) OnStreamResponse(int64, *v2.DiscoveryRequest, *v2.DiscoveryResponse) {
-	log.Info("OnStreamResponse")
+func (c Calls) OnStreamResponse(id int64, req *v2.DiscoveryRequest, res *v2.DiscoveryResponse) {
+	log.Infof("OnStreamResponse id:%d %v", id, req.ResourceNames)
 }
 
 // OnFetchRequest is called for each Fetch request. Returning an error will end processing of the
