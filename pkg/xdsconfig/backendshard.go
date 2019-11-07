@@ -18,7 +18,7 @@ func MakeBackendShard(name string) *BackendShard {
 	return &BackendShard{
 		Name:    name,
 		Tenants: []*Tenant{},
-		Gateway: MakeGateway(),
+		Gateway: MakeBackendGateway(),
 	}
 }
 

@@ -4,7 +4,6 @@ import (
     "net/http"
     "fmt"
     "bytes"
-//    "regexp"
     "strings"
     "github.com/bladedancer/envoyxds/pkg/xdsconfig"
     "github.com/bladedancer/envoyxds/pkg/apimgmt"
@@ -13,12 +12,14 @@ import (
 //TODO - Simple Entry Point Needs to be refactored
 
 //TennantRouter Router Struct for service
-type TennantRouter struct{
+type TennantRouter struct {
 }
+
 //GetTennantRouter Return a new Router Server
 func GetTennantRouter() *TennantRouter {
-    return &TennantRouter{}
+	return &TennantRouter{}
 }
+
 //Run Start the service
 func (t *TennantRouter) Run() {
 

@@ -23,7 +23,7 @@ type FrontendShard struct {
 func MakeFrontendShard(name string) *FrontendShard {
 	return &FrontendShard{
 		Name:    name,
-		Gateway: MakeGateway(),
+		Gateway: MakeFrontendGateway(),
 	}
 }
 
