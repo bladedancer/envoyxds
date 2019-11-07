@@ -2,6 +2,7 @@ package xdsconfig
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bladedancer/envoyxds/pkg/apimgmt"
@@ -15,22 +16,26 @@ import (
 
 // Proxy is the representation of a "proxy" in envoy.
 type Proxy struct {
-	Route   *route.Route
+	Routes  []*route.Route
 	Cluster *api.Cluster
 }
 
 // MakeProxy create a proxy.
 func MakeProxy(tenantName string, proxy *apimgmt.Proxy) *Proxy {
 	return &Proxy{
-		Route:   makeRoute(tenantName, proxy),
+		Routes:  makeRoute(tenantName, proxy),
 		Cluster: makeCluster(tenantName, proxy),
 	}
 }
 
-func makeRoute(tenantName string, proxy *apimgmt.Proxy) *route.Route {
-	id := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
-	r := &route.Route{
-		Name: id,
+// makeRoute Creates two routes for the API - one that has an exact match on the basepath and one that has a prefix
+// match on the basepath/
+func makeRoute(tenantName string, proxy *apimgmt.Proxy) []*route.Route {
+	clusterID := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
+
+	// Exact match on basepath
+	exactRoute := &route.Route{
+		Name: fmt.Sprintf("%s-%s", clusterID, "exact"),
 		Match: &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Path{
 				Path: proxy.Frontend.BasePath,
@@ -39,7 +44,7 @@ func makeRoute(tenantName string, proxy *apimgmt.Proxy) *route.Route {
 		Action: &route.Route_Route{
 			Route: &route.RouteAction{
 				ClusterSpecifier: &route.RouteAction_Cluster{
-					Cluster: id,
+					Cluster: clusterID,
 				},
 				PrefixRewrite: proxy.Backend.Path,
 				HostRewriteSpecifier: &route.RouteAction_HostRewrite{
@@ -48,7 +53,37 @@ func makeRoute(tenantName string, proxy *apimgmt.Proxy) *route.Route {
 			},
 		},
 	}
-	return r
+
+	// Match basepath/
+	target := proxy.Backend.Path
+	if !strings.HasSuffix(target, "/") {
+		target = target + "/"
+	}
+
+	prefixRoute := &route.Route{
+		Name: fmt.Sprintf("%s-%s", clusterID, "prefix"),
+		Match: &route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Prefix{
+				Prefix: proxy.Frontend.BasePath + "/",
+			},
+		},
+		Action: &route.Route_Route{
+			Route: &route.RouteAction{
+				ClusterSpecifier: &route.RouteAction_Cluster{
+					Cluster: clusterID,
+				},
+				PrefixRewrite: target,
+				HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+					HostRewrite: proxy.Backend.Host,
+				},
+			},
+		},
+	}
+
+	return []*route.Route{
+		prefixRoute,
+		exactRoute,
+	}
 }
 
 // makeCluster Create a cluster for the proxy
@@ -62,6 +97,13 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 			},
 		},
 	}}
+
+	var tlscontext *auth.UpstreamTlsContext
+	if proxy.Backend.TLS {
+		tlscontext = &auth.UpstreamTlsContext{
+			Sni: proxy.Backend.Host,
+		}
+	}
 
 	clusterName := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
 	return &api.Cluster{
@@ -88,8 +130,6 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 				},
 			},
 		},
-		TlsContext: &auth.UpstreamTlsContext{
-			Sni: proxy.Backend.Host,
-		},
+		TlsContext: tlscontext,
 	}
 }

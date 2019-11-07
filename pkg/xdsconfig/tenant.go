@@ -28,7 +28,7 @@ func MakeTenant(name string) *Tenant {
 func (t *Tenant) GetVirtualHost() *route.VirtualHost {
 	var routes []*route.Route
 	for _, proxy := range t.Proxies {
-		routes = append(routes, proxy.Route)
+		routes = append(routes, proxy.Routes...)
 	}
 
 	id := fmt.Sprintf("t_%s", t.Name)

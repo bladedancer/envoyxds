@@ -21,8 +21,28 @@ type Gateway struct {
 
 // MakeFrontendGateway creates a gateway for frontend services.
 func MakeFrontendGateway() *Gateway {
+	tlsContext := &auth.DownstreamTlsContext{
+		CommonTlsContext: &auth.CommonTlsContext{
+			TlsCertificates: []*auth.TlsCertificate{
+				&auth.TlsCertificate{
+					CertificateChain: &core.DataSource{
+						Specifier: &core.DataSource_Filename{
+							Filename: fmt.Sprintf("%s/certificate", config.CertPath),
+						},
+					},
+					PrivateKey: &core.DataSource{
+						Specifier: &core.DataSource_Filename{
+							Filename: fmt.Sprintf("%s/privateKey", config.CertPath),
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return &Gateway{
 		Listener: makeListenerConfiguration(
+			tlsContext,
 			&http_conn.HttpFilter{
 				Name:       "envoy.lua",
 				ConfigType: getLuaFilter(),
@@ -38,6 +58,7 @@ func MakeFrontendGateway() *Gateway {
 func MakeBackendGateway() *Gateway {
 	return &Gateway{
 		Listener: makeListenerConfiguration(
+			nil, // TLSContext
 			&http_conn.HttpFilter{
 				Name: "envoy.router",
 			},
@@ -46,7 +67,7 @@ func MakeBackendGateway() *Gateway {
 }
 
 // GetListener Get a test listener
-func makeListenerConfiguration(httpFilters ...*http_conn.HttpFilter) *api.Listener {
+func makeListenerConfiguration(tlsContext *auth.DownstreamTlsContext, httpFilters ...*http_conn.HttpFilter) *api.Listener {
 	var filterChains []*listener.FilterChain
 
 	accessLogStruct, _ := conversion.MessageToStruct(&access_config.FileAccessLog{
@@ -96,26 +117,14 @@ func makeListenerConfiguration(httpFilters ...*http_conn.HttpFilter) *api.Listen
 	}
 
 	filterChains = append(filterChains, &listener.FilterChain{
-		Filters: []*listener.Filter{filter},
-		TlsContext: &auth.DownstreamTlsContext{
-			CommonTlsContext: &auth.CommonTlsContext{
-				TlsCertificates: []*auth.TlsCertificate{
-					&auth.TlsCertificate{
-						CertificateChain: &core.DataSource{
-							Specifier: &core.DataSource_Filename{
-								Filename: fmt.Sprintf("%s/certificate", config.CertPath),
-							},
-						},
-						PrivateKey: &core.DataSource{
-							Specifier: &core.DataSource_Filename{
-								Filename: fmt.Sprintf("%s/privateKey", config.CertPath),
-							},
-						},
-					},
-				},
-			},
-		},
+		Filters:    []*listener.Filter{filter},
+		TlsContext: tlsContext,
 	})
+
+	port := uint32(80)
+	if tlsContext != nil {
+		port = 443
+	}
 
 	return &api.Listener{
 		Name: fmt.Sprintf("listener_%d", 42 /*todo*/),
@@ -124,7 +133,7 @@ func makeListenerConfiguration(httpFilters ...*http_conn.HttpFilter) *api.Listen
 				SocketAddress: &core.SocketAddress{
 					Address: "0.0.0.0",
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: 443,
+						PortValue: port,
 					},
 				},
 			},

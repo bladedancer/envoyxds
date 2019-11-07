@@ -5,6 +5,7 @@ type Backend struct {
 	Host string
 	Port uint32
 	Path string
+	TLS  bool
 }
 
 // Frontend The proxy frontend details.

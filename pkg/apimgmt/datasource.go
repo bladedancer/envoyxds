@@ -46,8 +46,13 @@ func generateTenants(count int) []*Tenant {
 
 func generateTenant(id int) *Tenant {
 	var proxies []*Proxy
-
+	tls := true
+	var port uint32
 	for i := 0; i < config.NumRoutes; i++ {
+		port = 80
+		if tls {
+			port = 443
+		}
 		proxies = append(
 			proxies,
 			&Proxy{
@@ -57,11 +62,13 @@ func generateTenant(id int) *Tenant {
 				},
 				Backend: &Backend{
 					Host: "www.google.com",
-					Port: 443,
+					Port: port,
 					Path: "/",
+					TLS:  tls,
 				},
 			},
 		)
+		tls = !tls
 	}
 	return &Tenant{
 		Name:    fmt.Sprintf("%d", id),

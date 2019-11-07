@@ -5,7 +5,6 @@ import (
 	"time"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -102,7 +101,7 @@ func makeRoutingCluster(shardName string) *api.Cluster {
 		SocketAddress: &core.SocketAddress{
 			Address: fmt.Sprintf("%s.back", shardName), // TODO shardName === pod name === clustername, not ideal
 			PortSpecifier: &core.SocketAddress_PortValue{
-				PortValue: 443, // TODO
+				PortValue: 80, // TODO
 			},
 		},
 	}}
@@ -131,6 +130,7 @@ func makeRoutingCluster(shardName string) *api.Cluster {
 				},
 			},
 		},
-		TlsContext: &auth.UpstreamTlsContext{}, // Probably doesn't need to be ssl
+		TlsContext:      nil,
+		TransportSocket: nil,
 	}
 }
