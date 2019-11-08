@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/bladedancer/envoyxds/pkg/datasource"
 	"github.com/bladedancer/envoyxds/pkg/xds"
 	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/spf13/cobra"
@@ -68,6 +69,7 @@ func run(cmd *cobra.Command, args []string) error {
 	setupConfig()
 	apimgmt.Init()
 	xdsconfig.Init()
+	datasource.Init()
 	xds.Init()
 	return xds.Run()
 }

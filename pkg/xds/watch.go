@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/bladedancer/envoyxds/pkg/datasource"
 	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 )
@@ -43,7 +43,7 @@ func watch(snapshotCache cache.SnapshotCache) {
 		}
 	}()
 
-	tenants, updateChan := apimgmt.GetTenants()
+	tenants, updateChan := datasource.TenantDatasource.GetTenants()
 	go func() {
 		for tenants := range updateChan {
 			deploymentManager.AddTenants(tenants...)

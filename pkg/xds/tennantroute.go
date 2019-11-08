@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/bladedancer/envoyxds/pkg/apimgmt"
-	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
+	"github.com/bladedancer/envoyxds/pkg/datasource"
 )
 
 //TODO - Simple Entry Point Needs to be refactored
@@ -50,46 +50,42 @@ func getSafeShard(host string, path string) string {
 		log.Warnf("shard should not be nil  %s", shard)
 		return "back-0"
 	}
-	ten := getTenantFromShard(s, tenant)
-	confirmOrMakeRoute(shard, ten, path)
+	confirmOrMakeRoute(shard, tenant, path)
 	return shard
 
 }
-func confirmOrMakeRoute(shard string, t *xdsconfig.Tenant, path string) {
-	found := false
-	for _, p := range t.Proxies {
-		for _, r := range p.Routes {
-			if r.Match.GetPath() == path {
-				found = true
-				break
-			}
-		}
 
-		if found {
+func confirmOrMakeRoute(shard string, tenantName string, path string) {
+	apiTenant := datasource.TenantDatasource.GetTenant(tenantName)
+	found := false
+	for _, p := range apiTenant.Proxies {
+		if p.Frontend.BasePath == path {
+			found = true
 			break
 		}
 	}
 	if !found {
-
 		path = strings.TrimPrefix(path, "/")
-		prox := xdsconfig.MakeProxy(t.Name, apimgmt.MakeProxy(t.Name, path))
-		t.Proxies = append(t.Proxies, prox)
-		deploymentManager.OnChange <- ([]*xdsconfig.BackendShard{deploymentManager.shards[shard]})
-		//TODO add some channel synchronization with a countdown latch
+		apiTenant.Proxies = append(apiTenant.Proxies, &apimgmt.Proxy{
+			Name: fmt.Sprintf("%s-google-%s", tenantName, path),
+			Frontend: &apimgmt.Frontend{
+				BasePath: fmt.Sprintf("/%s", path),
+			},
+			Backend: &apimgmt.Backend{
+				Host: "www.google.com",
+				Port: 443,
+				Path: "/",
+				TLS:  true,
+			},
+		})
+		datasource.TenantDatasource.UpsertTenant(apiTenant)
+		// prox := xdsconfig.MakeProxy(t.Name, apimgmt.MakeProxy(t.Name, path))
+		// t.Proxies = append(t.Proxies, prox)
+		// deploymentManager.OnChange <- ([]*xdsconfig.BackendShard{deploymentManager.shards[shard]})
+		// //TODO add some channel synchronization with a countdown latch
 		time.Sleep(500 * time.Millisecond)
 
 	}
-}
-
-// getTenantFromShard - Assumes tenant/shard affinity
-func getTenantFromShard(shard *xdsconfig.BackendShard, tName string) *xdsconfig.Tenant {
-	var res *xdsconfig.Tenant
-	for _, tenant := range shard.Tenants {
-		if tenant.Name == tName {
-			res = tenant
-		}
-	}
-	return res
 }
 
 //extractTenant = expecting something like this test-12.bladedancer.dynu.net, will return 12
