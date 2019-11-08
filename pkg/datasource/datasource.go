@@ -17,6 +17,5 @@ type Datasource interface {
 func initDatasource() {
 	TenantDatasource = MakeAggregateDatasource(
 		MakeMemoryDatasource(),
-		MakeFilesystemDatasource(),
 	)
 }
