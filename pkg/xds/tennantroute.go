@@ -31,7 +31,9 @@ func (t *TennantRouter) Run() {
 			buf.ReadFrom(r.Body)
 			log.Infof("Received %s", buf.String())
 			toks := strings.Split(buf.String(), ":")
-			fmt.Fprintf(w, "%s", getSafeShard(toks[0], toks[1]))
+			host := toks[0]
+			path := strings.Split(toks[1], "?")[0]
+			fmt.Fprintf(w, "%s", getSafeShard(host, path))
 
 		},
 	)
@@ -59,7 +61,7 @@ func confirmOrMakeRoute(shard string, tenantName string, path string) {
 	apiTenant := datasource.TenantDatasource.GetTenant(tenantName)
 	found := false
 	for _, p := range apiTenant.Proxies {
-		if p.Frontend.BasePath == path {
+		if p.Frontend.BasePath == path || strings.HasPrefix(path, p.Frontend.BasePath+"/") {
 			found = true
 			break
 		}

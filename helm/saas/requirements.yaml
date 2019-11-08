@@ -8,3 +8,6 @@ dependencies:
 - name: back
   version: 1.0.0
   repository: file://./../back
+- name: postgresql
+  version: 6.5.9
+  repository: file://./../postgresql

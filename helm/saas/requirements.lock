@@ -8,5 +8,8 @@ dependencies:
 - name: back
   repository: file://./../back
   version: 1.0.0
-digest: sha256:96c609e30b675c0ca0cef35b16b940626d62b8b5abd205138a77f53c9133bdc2
-generated: 2019-11-01T14:12:16.061682111Z
+- name: postgresql
+  repository: file://./../postgresql
+  version: 6.5.9
+digest: sha256:6b6038c4f8a4499c1783b836b965383d43306a422a8d7d8b0cd9f8eda6493b5e
+generated: 2019-11-08T15:06:42.479202785Z

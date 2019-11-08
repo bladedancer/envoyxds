@@ -1,0 +1,334 @@
+[debug] Created tunnel using local port: '36285'
+
+[debug] SERVER: "127.0.0.1:36285"
+
+[debug] Original chart version: ""
+[debug] CHART PATH: /work/hybrid/go/src/github.com/bladedancer/envoyxds/helm/postgresql
+
+NAME:   postgres
+REVISION: 1
+RELEASED: Fri Nov  8 14:54:36 2019
+CHART: postgresql-6.5.9
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+extraEnv: []
+global:
+  postgresql: {}
+image:
+  debug: false
+  pullPolicy: IfNotPresent
+  registry: docker.io
+  repository: bitnami/postgresql
+  tag: 11.5.0-debian-9-r84
+livenessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+master:
+  affinity: {}
+  annotations: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+  labels: {}
+  nodeSelector: {}
+  podAnnotations: {}
+  podLabels: {}
+  tolerations: []
+metrics:
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: bitnami/postgres-exporter
+    tag: 0.6.0-debian-9-r0
+  livenessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  readinessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  securityContext:
+    enabled: false
+    runAsUser: 1001
+  service:
+    annotations:
+      prometheus.io/port: "9187"
+      prometheus.io/scrape: "true"
+    loadBalancerIP: null
+    type: ClusterIP
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+networkPolicy:
+  allowExternal: true
+  enabled: false
+persistence:
+  accessModes:
+  - ReadWriteOnce
+  annotations: {}
+  enabled: false
+  mountPath: /bitnami/postgresql
+  size: 8Gi
+  subPath: ""
+postgresqlDataDir: /bitnami/postgresql/data
+postgresqlDatabase: gateway
+postgresqlPassword: postgres
+postgresqlUsername: postgres
+readinessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+replication:
+  applicationName: my_application
+  enabled: false
+  numSynchronousReplicas: 0
+  password: repl_password
+  slaveReplicas: 1
+  synchronousCommit: "off"
+  user: repl_user
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+securityContext:
+  enabled: true
+  fsGroup: 1001
+  runAsUser: 1001
+service:
+  annotations: {}
+  port: 5432
+  type: ClusterIP
+serviceAccount:
+  enabled: false
+slave:
+  affinity: {}
+  annotations: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+  labels: {}
+  nodeSelector: {}
+  podAnnotations: {}
+  podLabels: {}
+  tolerations: []
+updateStrategy:
+  type: RollingUpdate
+volumePermissions:
+  enabled: true
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: bitnami/minideb
+    tag: stretch
+  securityContext:
+    runAsUser: 0
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: postgresql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-6.5.9
+    release: "postgres"
+    heritage: "Tiller"
+type: Opaque
+data:
+  postgresql-password: "cG9zdGdyZXM="
+---
+# Source: postgresql/templates/initialization-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-postgresql-init-scripts
+  labels:
+    app: postgresql
+    chart: postgresql-6.5.9
+    release: "postgres"
+    heritage: "Tiller"
+data:
+  init.sql: |
+    CREATE OR REPLACE FUNCTION trigger_set_modified()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.last_updated = NOW();
+      RETURN NEW;
+    END;$$LANGUAGE 'plpgsql';
+  
+    CREATE TABLE proxy (
+       tenant_name varchar(50),
+       base_path varchar(120),
+       swagger jsonb,
+       created_on TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       PRIMARY KEY(tenant_name, base_path)
+    );
+  
+    CREATE TRIGGER set_modified
+    BEFORE UPDATE ON proxy
+    FOR EACH ROW
+    EXECUTE PROCEDURE trigger_set_modified();
+  
+    -- Import the bootstrapped tenants
+    COPY proxy FROM 'tenants/gavin.txt' (DELIMITER('|'));
+---
+# Source: postgresql/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-postgresql-headless
+  labels:
+    app: postgresql
+    chart: postgresql-6.5.9
+    release: "postgres"
+    heritage: "Tiller"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+  selector:
+    app: postgresql
+    release: "postgres"
+---
+# Source: postgresql/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-6.5.9
+    release: "postgres"
+    heritage: "Tiller"
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+  selector:
+    app: postgresql
+    release: "postgres"
+    role: master
+---
+# Source: postgresql/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-6.5.9
+    release: "postgres"
+    heritage: "Tiller"
+spec:
+  serviceName: postgres-postgresql-headless
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: postgresql
+      release: "postgres"
+      role: master
+  template:
+    metadata:
+      name: postgres-postgresql
+      labels:
+        app: postgresql
+        chart: postgresql-6.5.9
+        release: "postgres"
+        heritage: "Tiller"
+        role: master
+    spec:      
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: postgres-postgresql
+          image: docker.io/bitnami/postgresql:11.5.0-debian-9-r84
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            
+          securityContext:
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: POSTGRESQL_PORT_NUMBER
+              value: "5432"
+            - name: POSTGRESQL_VOLUME_DIR
+              value: "/bitnami/postgresql"
+            - name: PGDATA
+              value: "/bitnami/postgresql/data"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-postgresql
+                  key: postgresql-password
+            - name: POSTGRES_DB
+              value: "gateway"
+          ports:
+            - name: postgresql
+              containerPort: 5432
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "postgres" -d "gateway" -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - |
+                  pg_isready -U "postgres" -d "gateway" -h 127.0.0.1 -p 5432
+                  [ -f /opt/bitnami/postgresql/tmp/.initialized ]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          volumeMounts:
+            - name: custom-init-scripts
+              mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+        - name: custom-init-scripts
+          configMap:
+            name: postgres-postgresql-init-scripts
+        - name: data
+          emptyDir: {}

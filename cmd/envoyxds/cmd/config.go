@@ -17,6 +17,8 @@ func syncConfigFromViper() base.Config {
 		DNSRefreshRate: viper.GetInt64("dnsRefreshRate"),
 		RespectDNSTTL:  viper.GetBool("respectDNSTTL"),
 		NumShards:      viper.GetInt("shards"),
+		DatabaseURL:    viper.GetString("databaseUrl"),
+		DatabasePoll:   viper.GetInt("databasePoll"),
 	}
 }
 

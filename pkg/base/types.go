@@ -16,6 +16,8 @@ type Config struct {
 	DNSRefreshRate int64
 	RespectDNSTTL  bool
 	NumShards      int
+	DatabaseURL    string
+	DatabasePoll   int
 }
 
 var config *Config

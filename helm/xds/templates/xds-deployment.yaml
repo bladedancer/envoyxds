@@ -18,6 +18,11 @@ spec:
       labels:
         app: {{ .Chart.Name }}-xds
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          imagePullPolicy: IfNotPresent
+          image: alpine
+          command: ['sh', '-c', 'for i in $(seq 1 200); do nc -z -w3 {{ .Release.Name }}-postgresql 5432 && exit 0 || (echo "Waiting for postgres" && sleep 3); done; exit 1;']
       containers:
       - name: xds
         image: {{ .Values.xds.repo }}/envoyxds:latest
@@ -39,6 +44,8 @@ spec:
             value: "{{ .Values.xds.respectDNSTTL }}"
           - name: XDS_SHARDS
             value: "{{ .Values.xds.shards }}"
+          - name: XDS_DATABASEURL
+            value: "{{ .Values.xds.databaseUrl }}"
         ports:
         - containerPort: 12000
           name: xds

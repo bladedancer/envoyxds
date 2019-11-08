@@ -68,8 +68,7 @@ func (ds *AggregateDatasource) UpsertTenant(tenant *apimgmt.Tenant) {
 	// Could be more efficient
 	found := false
 	for _, s := range ds.sources {
-		tenant = s.GetTenant(tenant.Name)
-		if tenant != nil {
+		if s.GetTenant(tenant.Name) != nil {
 			found = true
 			s.UpsertTenant(tenant)
 			break

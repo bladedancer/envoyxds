@@ -5,7 +5,8 @@ xds:
     pumpInterval: 0               # a new tenant is added every n seconds. Set to 0 to disable.
     domain: bladedancer.dynu.net  # change to your domain
     shards: 3                     # must match replicaCount
-    repo:                         # Where to pull from
+    repo: bladedancer                      # Where to pull from
+    databaseUrl: postgres://postgres:postgres@saas-postgresql/gateway?sslmode=disable
 back:
   envoyss:
     replicaCount: 3 # must match shards
