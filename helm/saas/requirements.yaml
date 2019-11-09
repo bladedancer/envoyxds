@@ -11,3 +11,6 @@ dependencies:
 - name: postgresql
   version: 6.5.9
   repository: file://./../postgresql
+- name: redis
+  version: 9.5.2
+  repository: file://./../redis
