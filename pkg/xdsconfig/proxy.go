@@ -108,7 +108,7 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 	clusterName := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
 	return &api.Cluster{
 		Name:                 clusterName,
-		ConnectTimeout:       ptypes.DurationProto(250 * time.Millisecond),
+		ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
 		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:      api.Cluster_V4_ONLY,
 		RespectDnsTtl:        config.RespectDNSTTL,

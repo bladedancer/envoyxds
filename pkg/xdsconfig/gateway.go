@@ -2,6 +2,7 @@ package xdsconfig
 
 import (
 	"fmt"
+	"time"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -12,6 +13,7 @@ import (
 	lua "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2"
 	http_conn "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
+	"github.com/golang/protobuf/ptypes"
 )
 
 // Gateway The proxy gateway.
@@ -96,6 +98,7 @@ func makeListenerConfiguration(tlsContext *auth.DownstreamTlsContext, httpFilter
 				},
 			},
 		},
+		IdleTimeout: ptypes.DurationProto(2 * time.Second),
 		AccessLog: []*access_filter.AccessLog{
 			&access_filter.AccessLog{
 				Name: "envoy.file_access_log",
