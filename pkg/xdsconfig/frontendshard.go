@@ -108,7 +108,7 @@ func makeRoutingCluster(shardName string) *api.Cluster {
 
 	return &api.Cluster{
 		Name:                 shardName,
-		ConnectTimeout:       ptypes.DurationProto(250 * time.Millisecond),
+		ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
 		ClusterDiscoveryType: &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:      api.Cluster_V4_ONLY,
 		RespectDnsTtl:        config.RespectDNSTTL,
