@@ -151,6 +151,7 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 	tls := false
 	port := uint32(80)
 	host := "localhost"
+	basePath := ""
 
 	if proxyRow.Swagger["schemes"] != nil {
 		schemes = proxyRow.Swagger["schemes"].([]interface{})
@@ -178,7 +179,9 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 		}
 	}
 
-	basePath := proxyRow.Swagger["basePath"].(string)
+	if proxyRow.Swagger["basePath"] != nil {
+		basePath = proxyRow.Swagger["basePath"].(string)
+	}
 
 	return host, port, basePath, tls
 }

@@ -101,6 +101,12 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 	var tlscontext *auth.UpstreamTlsContext
 	if proxy.Backend.TLS {
 		tlscontext = &auth.UpstreamTlsContext{
+			CommonTlsContext: &auth.CommonTlsContext{
+				TlsParams: &auth.TlsParameters{
+					TlsMinimumProtocolVersion: auth.TlsParameters_TLSv1_2,
+					TlsMaximumProtocolVersion: auth.TlsParameters_TLSv1_3,
+				},
+			},
 			Sni: proxy.Backend.Host,
 		}
 	}
