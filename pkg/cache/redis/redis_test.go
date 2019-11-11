@@ -7,13 +7,17 @@ import (
     "sync"
     "time"
 
-    "github.com/go-redis/redis"
+    rcli "github.com/go-redis/redis"
+    "testing"
+    "github.com/bladedancer/envoyxds/pkg/cache/redis"
+    "context"
+    "github.com/bladedancer/envoyxds/pkg/cache"
 )
 
-var redisdb *redis.Client
+var redisdb *rcli.Client
 
 func init() {
-    redisdb = redis.NewClient(&redis.Options{
+    redisdb = rcli.NewClient(&rcli.Options{
         Addr:         ":6379",
         DialTimeout:  10 * time.Second,
         ReadTimeout:  30 * time.Second,
@@ -23,8 +27,23 @@ func init() {
     })
 }
 
+func TestGet(t *testing.T) {
+    c:=redis.New([]string{"localhost:6379"}, "", 0)
+    c.Connect()
+    m:=&cache.TestMessage{Id:"Test", Name:"TestName"}
+    err:=c.Set(context.Background(), "key", m, 0)
+    if (err!=nil) {
+        t.Error("Get Failed ")
+    }
+    m=&cache.TestMessage{}
+    c.Get(context.Background(),"key", m, true)
+    if m.Name != "TestName" {
+        t.Errorf("Expected %s Got %s", "TestName", m.Name)
+    }
+    }
+
 func ExampleNewClient() {
-    redisdb := redis.NewClient(&redis.Options{
+    redisdb := rcli.NewClient(&rcli.Options{
         Addr:     "localhost:6379", // use default Addr
         //Password: "", // TODO Should be a secret
         DB:       0,                // use default DB
@@ -48,7 +67,7 @@ func ExampleClient() {
     fmt.Println("key", val)
 
     val2, err := redisdb.Get("missing_key").Result()
-    if err == redis.Nil {
+    if err == rcli.Nil {
         fmt.Println("missing_key does not exist")
     } else if err != nil {
         panic(err)
@@ -113,8 +132,8 @@ func ExampleClient_Scan() {
 }
 
 func ExampleClient_Pipelined() {
-    var incr *redis.IntCmd
-    _, err := redisdb.Pipelined(func(pipe redis.Pipeliner) error {
+    var incr *rcli.IntCmd
+    _, err := redisdb.Pipelined(func(pipe rcli.Pipeliner) error {
         incr = pipe.Incr("pipelined_counter")
         pipe.Expire("pipelined_counter", time.Hour)
         return nil
@@ -141,8 +160,8 @@ func ExampleClient_Pipeline() {
 }
 
 func ExampleClient_TxPipelined() {
-    var incr *redis.IntCmd
-    _, err := redisdb.TxPipelined(func(pipe redis.Pipeliner) error {
+    var incr *rcli.IntCmd
+    _, err := redisdb.TxPipelined(func(pipe rcli.Pipeliner) error {
         incr = pipe.Incr("tx_pipelined_counter")
         pipe.Expire("tx_pipelined_counter", time.Hour)
         return nil
@@ -175,10 +194,10 @@ func ExampleClient_Watch() {
 
     // Transactionally increments key using GET and SET commands.
     increment := func(key string) error {
-        txf := func(tx *redis.Tx) error {
+        txf := func(tx *rcli.Tx) error {
             // get current value or zero
             n, err := tx.Get(key).Int()
-            if err != nil && err != redis.Nil {
+            if err != nil && err != rcli.Nil {
                 return err
             }
 
@@ -186,7 +205,7 @@ func ExampleClient_Watch() {
             n++
 
             // runs only if the watched keys remain unchanged
-            _, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
+            _, err = tx.Pipelined(func(pipe rcli.Pipeliner) error {
                 // pipe handles the error case
                 pipe.Set(key, n, 0)
                 return nil
@@ -196,7 +215,7 @@ func ExampleClient_Watch() {
 
         for retries := routineCount; retries > 0; retries-- {
             err := redisdb.Watch(txf, key)
-            if err != redis.TxFailedErr {
+            if err != rcli.TxFailedErr {
                 return err
             }
             // optimistic lock lost
@@ -265,14 +284,14 @@ func ExamplePubSub_Receive() {
         }
 
         switch msg := msgi.(type) {
-        case *redis.Subscription:
+        case *rcli.Subscription:
             fmt.Println("subscribed to", msg.Channel)
 
             _, err := redisdb.Publish("mychannel2", "hello").Result()
             if err != nil {
                 panic(err)
             }
-        case *redis.Message:
+        case *rcli.Message:
             fmt.Println("received", msg.Payload, "from", msg.Channel)
         default:
             panic("unreached")
@@ -284,9 +303,9 @@ func ExamplePubSub_Receive() {
 }
 
 func ExampleScript() {
-    IncrByXX := redis.NewScript(`
-		if redis.call("GET", KEYS[1]) ~= false then
-			return redis.call("INCRBY", KEYS[1], ARGV[1])
+    IncrByXX := rcli.NewScript(`
+		if rcli.call("GET", KEYS[1]) ~= false then
+			return rcli.call("INCRBY", KEYS[1], ARGV[1])
 		end
 		return false
 	`)
@@ -307,8 +326,8 @@ func ExampleScript() {
 }
 
 func Example_customCommand() {
-    Get := func(redisdb *redis.Client, key string) *redis.StringCmd {
-        cmd := redis.NewStringCmd("get", key)
+    Get := func(redisdb *rcli.Client, key string) *rcli.StringCmd {
+        cmd := rcli.NewStringCmd("get", key)
         redisdb.Process(cmd)
         return cmd
     }
@@ -345,7 +364,7 @@ func ExampleScanCmd_Iterator() {
 }
 
 func ExampleNewUniversalClient_simple() {
-    redisdb := redis.NewUniversalClient(&redis.UniversalOptions{
+    redisdb := rcli.NewUniversalClient(&rcli.UniversalOptions{
         Addrs: []string{":6379"},
     })
     defer redisdb.Close()
@@ -354,7 +373,7 @@ func ExampleNewUniversalClient_simple() {
 }
 
 func ExampleNewUniversalClient_failover() {
-    redisdb := redis.NewUniversalClient(&redis.UniversalOptions{
+    redisdb := rcli.NewUniversalClient(&rcli.UniversalOptions{
         MasterName: "master",
         Addrs:      []string{":26379"},
     })
@@ -364,7 +383,7 @@ func ExampleNewUniversalClient_failover() {
 }
 
 func ExampleNewUniversalClient_cluster() {
-    redisdb := redis.NewUniversalClient(&redis.UniversalOptions{
+    redisdb := rcli.NewUniversalClient(&rcli.UniversalOptions{
         Addrs: []string{":7000", ":7001", ":7002", ":7003", ":7004", ":7005"},
     })
     defer redisdb.Close()
