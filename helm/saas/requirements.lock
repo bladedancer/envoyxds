@@ -2,6 +2,9 @@ dependencies:
 - name: xds
   repository: file://./../xds
   version: 1.0.0
+- name: xds
+  repository: file://./../authz
+  version: 1.0.0
 - name: front
   repository: file://./../front
   version: 1.0.0
@@ -11,5 +14,8 @@ dependencies:
 - name: postgresql
   repository: file://./../postgresql
   version: 6.5.9
-digest: sha256:6b6038c4f8a4499c1783b836b965383d43306a422a8d7d8b0cd9f8eda6493b5e
-generated: 2019-11-08T15:06:42.479202785Z
+- name: redis
+  repository: file://./../redis
+  version: 9.5.2
+digest: sha256:85936b065c8d141eee74ccd73a31b1f50c480258a1c834d74b71869a7ad64a4c
+generated: "2019-11-12T15:43:50.224451-07:00"

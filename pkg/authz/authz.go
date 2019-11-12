@@ -13,10 +13,10 @@ import (
     auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 )
 
-// empty struct because this isn't a fancy example
+// AuthorizationServer empty struct because this isn't a fancy example
 type AuthorizationServer struct{}
 
-// inject a header that can be used for future rate limiting
+// Check - Passthrough at the moment- check redis and add a header
 func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest) (*auth.CheckResponse, error) {
     out:=&ApiKeyMessage{}
     c.Get(context.Background(), "APIKey", out, true)

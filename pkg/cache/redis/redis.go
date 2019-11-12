@@ -52,8 +52,12 @@ func (r *redis) Connect() error {
 // Close connection to etcd
 func (r *redis) Close() error {
 
-   // TODO
-return r.client.Close()
+    err:=r.client.Close()
+    if err != nil {
+
+        log.Warnf("Error on Set %s", err)
+    }
+    return err
 }
 
 
@@ -73,22 +77,19 @@ func (r* redis) Set(ctx context.Context, key string, val proto.Message, ttl int6
 }
 
 // Get unmarshals the protocol buffer message found at key into out, if found.
-// If not found and ignoreNotFound is set, then out will be a zero object, otherwise
-// error will be set to not found. A non-existing node or an empty response are both
-// treated as not found.
 func (r* redis) Get(ctx context.Context, key string, out proto.Message, ignoreNotFound bool) error {
 
-  b, err:=r.client.Get("key").Bytes()
+  b, err:=r.client.Get(key).Bytes()
+  if err!=nil {
+      log.Warnf("Error on Get %s", err)
+  }
   proto.Unmarshal(b, out)
   return err
 }
 
-// Delete(ctx context.Context, key string, recurse bool, out proto.Message) error
-// TODO: will need to add preconditions support
-// if recurse then all the key having the same path under 'key' are going to be deleted
-// if !recurse then only 'key' is going to be deleted
+// Delete Delete the key at a specific value
 func (r *redis) Delete(ctx context.Context, key string, recurse bool, out proto.Message) error {
-// TODO
-return nil
+    r.client.Del(key).Err()
+return r.client.Del(key).Err()
 }
 

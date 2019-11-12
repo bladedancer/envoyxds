@@ -19,7 +19,7 @@ type Config struct {
 	DatabaseURL    string
 	DatabasePoll   int
 }
-
+//CacheConfig defines the cfg for cache implementation
 type CacheConfig struct {
     Port           uint32
     Path           string
