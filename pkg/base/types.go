@@ -20,7 +20,12 @@ type Config struct {
 	DatabasePoll   int
 }
 
+type CacheConfig struct {
+    Port           uint32
+    Path           string
+}
 var config *Config
+var cachecfg *CacheConfig
 var logger *logrus.Logger
 
 // SetLog sets the logger for the package.
@@ -36,11 +41,21 @@ func GetLog(name string) logrus.FieldLogger {
 
 // SetConfig sets the config for the package.
 func SetConfig(c *Config) {
-	config = c
-	return
+    config = c
+    return
 }
 
 // GetConfig returns the current config.
 func GetConfig() *Config {
-	return config
+    return config
+}
+// SetCacheConfig sets the config for the package.
+func SetCacheConfig(c *CacheConfig) {
+    cachecfg = c
+    return
+}
+
+// GetCacheConfig returns the current config.
+func GetCacheConfig() *CacheConfig {
+    return cachecfg
 }

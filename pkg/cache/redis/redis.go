@@ -45,7 +45,8 @@ func (r *redis) Connect() error {
         PoolSize:     10,
         PoolTimeout:  30 * time.Second,
     })
-  return nil
+    _, err := r.client.Ping().Result()
+  return err
 }
 
 // Close connection to etcd

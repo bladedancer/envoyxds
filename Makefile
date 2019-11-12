@@ -1,4 +1,4 @@
-PROJECT_NAME := envoyxds
+PROJECT_NAME ?= envoyxds
 PKG_LIST := $(shell go list ./... | grep -v /vendor/)
 REGISTRY ?= bladedancer
 
@@ -12,10 +12,10 @@ lint: ## Lint the files
 	@golint	-set_exit_status	${PKG_LIST}
 
 build: ## Build the binary for linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build	-o ./bin/$(PROJECT_NAME)	./cmd/envoyxds
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build	-o ./bin/$(PROJECT_NAME)	./cmd/$(PROJECT_NAME)
 
 docker-build: ## Build docker image
-	docker build -t $(REGISTRY)/$(PROJECT_NAME):latest	.
+	docker build -f ./cmd/$(PROJECT_NAME)/Dockerfile -t $(REGISTRY)/$(PROJECT_NAME):latest	.
 
 push: ## Push docker image
 	docker push $(REGISTRY)/$(PROJECT_NAME):latest

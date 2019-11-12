@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package authz;
+
+message ApiKeyMessage {
+    string key = 1;
+}
