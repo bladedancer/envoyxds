@@ -46,6 +46,8 @@ spec:
             value: "{{ .Values.xds.shards }}"
           - name: XDS_DATABASEURL
             value: "{{ .Values.xds.databaseUrl }}"
+          - name: XDS_USEPROXYPROTO
+            value: "{{ .Values.xds.useProxyProto }}"
         ports:
         - containerPort: 12000
           name: xds

@@ -14,6 +14,7 @@ import (
 	http_conn "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 	"github.com/golang/protobuf/ptypes"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 )
 
 // Gateway The proxy gateway.
@@ -53,6 +54,7 @@ func MakeFrontendGateway() *Gateway {
 
 	return &Gateway{
 		Listener: makeListenerConfiguration(
+			config.UseProxyProto,
 			tlsContext,
 			&http_conn.HttpFilter{
 				Name:       "envoy.lua",
@@ -69,6 +71,7 @@ func MakeFrontendGateway() *Gateway {
 func MakeBackendGateway() *Gateway {
 	return &Gateway{
 		Listener: makeListenerConfiguration(
+			false,
 			nil, // TLSContext
 			&http_conn.HttpFilter{
 				Name: "envoy.router",
@@ -78,7 +81,7 @@ func MakeBackendGateway() *Gateway {
 }
 
 // GetListener Get a test listener
-func makeListenerConfiguration(tlsContext *auth.DownstreamTlsContext, httpFilters ...*http_conn.HttpFilter) *api.Listener {
+func makeListenerConfiguration(useProxyProto bool, tlsContext *auth.DownstreamTlsContext, httpFilters ...*http_conn.HttpFilter) *api.Listener {
 	var filterChains []*listener.FilterChain
 
 	accessLogStruct, _ := conversion.MessageToStruct(&access_config.FileAccessLog{
@@ -131,6 +134,9 @@ func makeListenerConfiguration(tlsContext *auth.DownstreamTlsContext, httpFilter
 	filterChains = append(filterChains, &listener.FilterChain{
 		Filters:    []*listener.Filter{filter},
 		TlsContext: tlsContext,
+		UseProxyProto: &wrappers.BoolValue{
+			Value: useProxyProto,
+		},
 	})
 
 	port := uint32(80)

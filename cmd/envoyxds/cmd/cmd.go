@@ -36,6 +36,7 @@ func init() {
 	RootCmd.Flags().Int("shards", 3, "The number of backend envoys.") // We should be querying this dynamically from k8s
 	RootCmd.Flags().String("databaseUrl", "postgres://postgres:postgres@localhost/gateway?sslmode=disable", "The database connection url.")
 	RootCmd.Flags().Int("databasePoll", 30, "Poll the database for updates every n seconds.")
+	RootCmd.Flags().Bool("useProxyProto", false, "Required if deploying to aws with aws-load-balancer-proxy-protocol annotation enabled.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
@@ -51,6 +52,7 @@ func init() {
 	bindOrPanic("pump", RootCmd.Flags().Lookup("pump"))
 	bindOrPanic("databaseUrl", RootCmd.Flags().Lookup("databaseUrl"))
 	bindOrPanic("databasePoll", RootCmd.Flags().Lookup("databasePoll"))
+	bindOrPanic("useProxyProto", RootCmd.Flags().Lookup("useProxyProto"))
 }
 
 func initConfig() {
