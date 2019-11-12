@@ -25,6 +25,15 @@ type Gateway struct {
 func MakeFrontendGateway() *Gateway {
 	tlsContext := &auth.DownstreamTlsContext{
 		CommonTlsContext: &auth.CommonTlsContext{
+			TlsParams: &auth.TlsParameters{
+				TlsMinimumProtocolVersion: auth.TlsParameters_TLSv1_2,
+				TlsMaximumProtocolVersion: auth.TlsParameters_TLSv1_3,
+				EcdhCurves: []string{
+					"P-256",
+					"P-384",
+					"P-521",
+				},
+			},
 			TlsCertificates: []*auth.TlsCertificate{
 				&auth.TlsCertificate{
 					CertificateChain: &core.DataSource{
