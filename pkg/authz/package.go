@@ -24,5 +24,5 @@ func Init() {
     if err!=nil {
         log.Fatalf("Unable to connect: %s", err)
     }
-    c.Set(context.Background(), "APIKey", &ApiKeyMessage{}, 0)
+    c.Set(context.Background(), "APIKey", &ApiKeyMessage{Key:"This is the key for now"}, 0)
 }

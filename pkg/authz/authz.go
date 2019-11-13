@@ -20,6 +20,7 @@ type AuthorizationServer struct{}
 func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest) (*auth.CheckResponse, error) {
     out:=&ApiKeyMessage{}
     c.Get(context.Background(), "APIKey", out, true)
+    log.Infof("Passthrough with key %s", out.Key)
     return &auth.CheckResponse{
         Status: &rpcstatus.Status{
             Code: int32(rpc.OK),

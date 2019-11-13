@@ -2,7 +2,7 @@ dependencies:
 - name: xds
   version: 1.0.0
   repository: file://./../xds
-- name: xds
+- name: authz
   version: 1.0.0
   repository: file://./../authz
 - name: front

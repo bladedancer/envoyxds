@@ -7,7 +7,11 @@ PKG := bladedancer/$(PROJECT_NAME)
 
 .PHONY: clean
 
-all: clean lint protoc build docker-build push ## Build everything
+_all: clean lint protoc build docker-build push ## Build everything
+
+all:
+	@$(MAKE) _all
+	@$(MAKE) _all BIN=authz
 
 lint: ## Lint the files
 	@golint	-set_exit_status	${PKG_LIST}
