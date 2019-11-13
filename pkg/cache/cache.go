@@ -51,4 +51,3 @@ type Cache interface{
     CompareAndSet(ctx context.Context, key string, expect proto.Message, update proto.Message) error
 */
 }
-

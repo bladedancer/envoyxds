@@ -1,0 +1,6 @@
+authz:
+  address: authz
+  port: 20000
+  path: "saas-redis-master:6379"
+  repo: chrisccoy
+

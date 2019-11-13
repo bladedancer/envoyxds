@@ -45,6 +45,7 @@ echo ======================
 
 #docker pull bladedancer/envoyxds:latest
 k3d i --name=xds  $REPO/envoyxds:latest
+k3d i --name=xds  $REPO/authz:latest
 
 echo ======================
 echo ===    Wait     ===

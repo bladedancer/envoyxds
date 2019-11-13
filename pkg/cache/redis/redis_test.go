@@ -27,7 +27,7 @@ func init() {
     })
 }
 
-func TestGet(t *testing.T) {
+func TestGetSet(t *testing.T) {
     c:=redis.New([]string{"localhost:6379"}, "", 0)
     c.Connect()
     m:=&cache.TestMessage{Id:"Test", Name:"TestName"}

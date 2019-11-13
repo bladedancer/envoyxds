@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authz
+  namespace: {{.Release.Namespace}}
+  labels:
+    app: {{ .Chart.Name }}-authz
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-authz
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-authz
+    spec:
+      initContainers:
+        - name: wait-for-redis
+          imagePullPolicy: IfNotPresent
+          image: alpine
+          command: ['sh', '-c', 'for i in $(seq 1 200); do nc -z -w3 {{ .Release.Name }}-redis-master 6379 && exit 0 || (echo "Waiting for redis" && sleep 3); done; exit 1;']
+      containers:
+      - name: authz
+        image: {{ .Values.authz.repo }}/authz:latest
+        pullPolicy: IfNotPresent
+        env:
+          - name: AUTHZ_PORT
+            value: "20000"
+          - name: AUTHZ_PATH
+            value: "{{ .Values.authz.path }}"
+        ports:
+        - containerPort: 20000
+          name: authz
