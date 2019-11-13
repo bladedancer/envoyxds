@@ -90,7 +90,7 @@ envoy:
                     - "*"
                     routes:
                     - match:
-                        prefix: "/auth"
+                        prefix: "/hello"
                       route:
                         cluster: extweb_service
                         prefix_rewrite: "/"
