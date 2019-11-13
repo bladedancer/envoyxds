@@ -10,6 +10,7 @@ import (
 	listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	access_config "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
 	access_filter "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
+	ext_authz "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
 	lua "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2"
 	http_conn "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
@@ -73,6 +74,7 @@ func MakeBackendGateway() *Gateway {
 		Listener: makeListenerConfiguration(
 			false,
 			nil, // TLSContext
+			getExtAuthzFilter(),
 			&http_conn.HttpFilter{
 				Name: "envoy.router",
 			},
@@ -187,5 +189,29 @@ func getLuaFilter() *http_conn.HttpFilter_Config {
 	luaConfig, _ := conversion.MessageToStruct(luaCfg)
 	return &http_conn.HttpFilter_Config{
 		Config: luaConfig,
+	}
+}
+
+func getExtAuthzFilter() *http_conn.HttpFilter {
+	extAuthz := &ext_authz.ExtAuthz{
+		FailureModeAllow: false,
+		Services: &ext_authz.ExtAuthz_GrpcService{
+			GrpcService: &core.GrpcService{
+				Timeout: ptypes.DurationProto(5 * time.Second),
+				TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+					EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+						ClusterName: "service_authz",
+					},
+				},
+			},
+		},
+	}
+	authzConfig, _ := conversion.MessageToStruct(extAuthz)
+
+	return &http_conn.HttpFilter{
+		Name: "envoy.ext_authz",
+		ConfigType: &http_conn.HttpFilter_Config{
+			Config: authzConfig,
+		},
 	}
 }

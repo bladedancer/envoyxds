@@ -4,6 +4,9 @@ envoyss:
   xdsService:
     address: xds
     port: 9000
+  authzService:
+    address: authz
+    port: 20000
   args:
     - -l
     - info
@@ -71,7 +74,28 @@ envoyss:
           dns_refresh_rate: "30s"
           lb_policy: ROUND_ROBIN
           http2_protocol_options: {}
-          hosts:
-          - socket_address:
-              address: {{ .Values.xdsService.address }}
-              port_value: {{ .Values.xdsService.port }}
+          load_assignment:
+            cluster_name: service_xds
+            endpoints:
+            - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: {{ .Values.xdsService.address }}
+                      port_value: {{ .Values.xdsService.port }}
+        - name: service_authz
+          connect_timeout: 0.25s
+          type: LOGICAL_DNS
+          dns_lookup_family: V4_ONLY
+          dns_refresh_rate: "30s"
+          lb_policy: ROUND_ROBIN
+          http2_protocol_options: {}
+          load_assignment:
+            cluster_name: service_authz
+            endpoints:
+            - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: {{ .Values.authzService.address }}
+                      port_value: {{ .Values.authzService.port }}
