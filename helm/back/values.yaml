@@ -9,11 +9,6 @@ envoyss:
     - info
     - -c
     - /env-config/envoy.yaml
-  secretMounts:
-    certs:
-      mountPath: /certs
-      secretName: default-tls-back
-      defaultMode: 511 # TODO
   ports:
     n0:
       containerPort: 443 # probably don't need tls here.

@@ -105,6 +105,11 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 				TlsParams: &auth.TlsParameters{
 					TlsMinimumProtocolVersion: auth.TlsParameters_TLSv1_2,
 					TlsMaximumProtocolVersion: auth.TlsParameters_TLSv1_3,
+					EcdhCurves: []string{
+						"P-256",
+						"P-384",
+						"P-521",
+					},
 				},
 			},
 			Sni: proxy.Backend.Host,

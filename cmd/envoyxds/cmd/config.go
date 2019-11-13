@@ -19,6 +19,7 @@ func syncConfigFromViper() base.Config {
 		NumShards:      viper.GetInt("shards"),
 		DatabaseURL:    viper.GetString("databaseUrl"),
 		DatabasePoll:   viper.GetInt("databasePoll"),
+		UseProxyProto:  viper.GetBool("useProxyProto"),
 	}
 }
 

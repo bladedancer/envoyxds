@@ -18,6 +18,7 @@ type Config struct {
 	NumShards      int
 	DatabaseURL    string
 	DatabasePoll   int
+	UseProxyProto  bool
 }
 //CacheConfig defines the cfg for cache implementation
 type CacheConfig struct {
