@@ -9,8 +9,11 @@ PKG := bladedancer/$(PROJECT_NAME)
 
 _all: clean lint protoc build docker-build push ## Build everything
 
-all:
-	@$(MAKE) _all
+all: xds authz
+
+xds:
+	@$(MAKE) _all BIN=envoyxds
+authz:
 	@$(MAKE) _all BIN=authz
 
 lint: ## Lint the files
