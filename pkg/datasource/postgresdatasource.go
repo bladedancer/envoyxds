@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -103,7 +102,7 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 
 	for _, tenant := range updatedTenants {
 		log.Infof("Loading tenant [%s] updates", tenant)
-		rows, err := ds.db.Query("SELECT id, tenant_name, base_path, swagger FROM proxy WHERE tenant_name = $1", tenant)
+		rows, err := ds.db.Query("SELECT id, tenant_name, base_path, auth, swagger FROM proxy WHERE tenant_name = $1", tenant)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -111,22 +110,24 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 		proxies := []*apimgmt.Proxy{}
 		for rows.Next() {
 			proxyRow := new(_ProxyRow)
-			err = rows.Scan(&proxyRow.ID, &proxyRow.Name, &proxyRow.BasePath, &proxyRow.Swagger)
+			err = rows.Scan(&proxyRow.ID, &proxyRow.Name, &proxyRow.BasePath, &proxyRow.Authorization, &proxyRow.Swagger)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			host, port, basePath, tls := getBackendDetails(proxyRow)
+			feBasePath, authorizations := getFrontendDetails(proxyRow)
+			host, port, beBasePath, tls := getBackendDetails(proxyRow)
 
 			// Create the proxy
 			proxy := &apimgmt.Proxy{
 				Name: strconv.Itoa(proxyRow.ID),
 				Frontend: &apimgmt.Frontend{
-					BasePath: proxyRow.BasePath,
+					BasePath:      feBasePath,
+					Authorization: authorizations,
 				},
 				Backend: &apimgmt.Backend{
 					Host: host,
-					Path: basePath,
+					Path: beBasePath,
 					Port: port,
 					TLS:  tls,
 				},
@@ -143,6 +144,12 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 	}
 
 	return apiTenants, now
+}
+
+func getFrontendDetails(proxyRow *_ProxyRow) (string, []apimgmt.Authorization) {
+	// TODO - support multiple frontend auth profiles.
+	authorization := getFrontendAuthorization(proxyRow.Authorization)
+	return proxyRow.BasePath, []apimgmt.Authorization{authorization}
 }
 
 func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
@@ -186,13 +193,38 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 	return host, port, basePath, tls
 }
 
+// getFrontendAuthorization Convert the auth details to an Authorization
+func getFrontendAuthorization(authAttrs _Attrs) apimgmt.Authorization {
+	if authAttrs == nil && len(authAttrs) == 0 {
+		return &apimgmt.PassthroughAuthorization{}
+	}
+
+	var auth apimgmt.Authorization
+	switch (apimgmt.AuthorizationType)(authAttrs["type"].(string)) {
+	case apimgmt.AuthorizationTypePassthrough:
+		auth = &apimgmt.PassthroughAuthorization{}
+	case apimgmt.AuthorizationTypeAPIKey:
+		auth = &apimgmt.APIKeyAuthorization{
+			Name:     authAttrs["name"].(string),
+			Location: authAttrs["in"].(string),
+		}
+	case apimgmt.AuthorizationTypeHTTP:
+		auth = &apimgmt.HTTPAuthorization{
+			Scheme: authAttrs["scheme"].(string),
+		}
+	}
+
+	return auth
+}
+
 type _ProxyRow struct {
-	ID       int
-	Name     string
-	BasePath string
-	Swagger  _Attrs
-	Created  time.Time
-	Updated  time.Time
+	ID            int
+	Name          string
+	BasePath      string
+	Authorization _Attrs
+	Swagger       _Attrs
+	Created       time.Time
+	Updated       time.Time
 }
 
 type _Attrs map[string]interface{}
@@ -204,7 +236,7 @@ func (a _Attrs) Value() (driver.Value, error) {
 func (a *_Attrs) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return errors.New("type assertion to []byte failed")
+		return nil
 	}
 
 	return json.Unmarshal(b, &a)

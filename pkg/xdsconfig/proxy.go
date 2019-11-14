@@ -11,7 +11,10 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	ext_authz "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 	"github.com/golang/protobuf/ptypes"
+	_struct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // Proxy is the representation of a "proxy" in envoy.
@@ -32,6 +35,7 @@ func MakeProxy(tenantName string, proxy *apimgmt.Proxy) *Proxy {
 // match on the basepath/
 func makeRoute(tenantName string, proxy *apimgmt.Proxy) []*route.Route {
 	clusterID := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
+	extAuthConfig := makeExtAuthzConfig(proxy.Frontend.Authorization)
 
 	// Exact match on basepath
 	exactRoute := &route.Route{
@@ -51,6 +55,9 @@ func makeRoute(tenantName string, proxy *apimgmt.Proxy) []*route.Route {
 					HostRewrite: proxy.Backend.Host,
 				},
 			},
+		},
+		PerFilterConfig: map[string]*_struct.Struct{
+			"envoy.ext_authz": extAuthConfig,
 		},
 	}
 
@@ -77,6 +84,9 @@ func makeRoute(tenantName string, proxy *apimgmt.Proxy) []*route.Route {
 					HostRewrite: proxy.Backend.Host,
 				},
 			},
+		},
+		PerFilterConfig: map[string]*_struct.Struct{
+			"envoy.ext_authz": extAuthConfig,
 		},
 	}
 
@@ -143,4 +153,65 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 		},
 		TlsContext: tlscontext,
 	}
+}
+
+// makeExtAuthzConfig Create the per route config overrides for external authorization.
+func makeExtAuthzConfig(authorizations []apimgmt.Authorization) *_struct.Struct {
+	var config *ext_authz.ExtAuthzPerRoute
+
+	if authorizations == nil || len(authorizations) == 0 {
+		// In the future we may want to call out to the filter to do more than
+		// frontend auth...in which case we wouldn't be disabling the filter for
+		// passthrough....but for now it's a nice example.
+		config = &ext_authz.ExtAuthzPerRoute{
+			Override: &ext_authz.ExtAuthzPerRoute_Disabled{
+				Disabled: true,
+			},
+		}
+	} else {
+		// TODO: Handle scenario where we have multiple frontend auth profiles....
+		// will it still be more efficient to store the data statically on the route
+		// and pass it to the auth server?
+		authorization := authorizations[0]
+
+		switch authorization.Type() {
+		case apimgmt.AuthorizationTypePassthrough:
+			// In the future we may want to call out to the filter to do more than
+			// frontend auth...in which case we wouldn't be disabling the filter for
+			// passthrough....but for now it's a nice example.
+			config = &ext_authz.ExtAuthzPerRoute{
+				Override: &ext_authz.ExtAuthzPerRoute_Disabled{
+					Disabled: true,
+				},
+			}
+		case apimgmt.AuthorizationTypeAPIKey:
+			typedAuth := authorization.(*apimgmt.APIKeyAuthorization)
+			config = &ext_authz.ExtAuthzPerRoute{
+				Override: &ext_authz.ExtAuthzPerRoute_CheckSettings{
+					CheckSettings: &ext_authz.CheckSettings{
+						ContextExtensions: map[string]string{
+							"auth_type": (string)(typedAuth.Type()),
+							"auth_in":   typedAuth.Location,
+							"auth_name": typedAuth.Name,
+						},
+					},
+				},
+			}
+		case apimgmt.AuthorizationTypeHTTP:
+			typedAuth := authorization.(*apimgmt.HTTPAuthorization)
+			config = &ext_authz.ExtAuthzPerRoute{
+				Override: &ext_authz.ExtAuthzPerRoute_CheckSettings{
+					CheckSettings: &ext_authz.CheckSettings{
+						ContextExtensions: map[string]string{
+							"auth_type":   (string)(typedAuth.Type()),
+							"auth_scheme": typedAuth.Scheme,
+						},
+					},
+				},
+			}
+		}
+	}
+
+	perRoute, _ := conversion.MessageToStruct(config)
+	return perRoute
 }
