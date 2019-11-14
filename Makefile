@@ -51,6 +51,7 @@ PROTOALLTARGETS := $(PROTOTARGETS)
 	-u $$(id -u):$$(id -g)                    \
 	chrisccoy/golang-gw:1.0.0 	protoc \
 	-I /go/src -I/go/src/$(PKG)/vendor \
+	-I/go/src/$(PKG)/vendor/github.com/gogo/protobuf/protobuf \
 	--go_out=plugins=grpc:/go/src  \
 	/go/src/$(PKG)/$<
 

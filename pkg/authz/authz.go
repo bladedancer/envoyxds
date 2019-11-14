@@ -11,6 +11,8 @@ import (
 
     core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
     auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
+    "github.com/golang/protobuf/ptypes"
+    "github.com/gogo/protobuf/proto"
 )
 
 // AuthorizationServer empty struct because this isn't a fancy example
@@ -56,6 +58,15 @@ func Run() error {
 
     if err := grpcServer.Serve(lis); err != nil {
         log.Fatalf("Failed to start server: %v", err)
+    }
+    return nil
+}
+func GetBasicContext(ctx AuthContext)  {
+    switch ctx.CtxType {
+    case ChangeType_BASIC:
+        b:=BasicAuthCtx{}
+        ptypes.UnmarshalAny(ctx.Context,&b)
+        return &b
     }
     return nil
 }
