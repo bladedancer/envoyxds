@@ -8,7 +8,6 @@ import (
     "github.com/bladedancer/envoyxds/pkg/base"
 
     auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
-    "github.com/golang/protobuf/ptypes"
 )
 
 // AuthorizationServer empty struct because this isn't a fancy example

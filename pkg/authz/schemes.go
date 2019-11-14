@@ -10,9 +10,15 @@ import (
     "github.com/golang/protobuf/ptypes"
 )
 func checkAgainstScheme(req *auth.CheckRequest) *auth.CheckResponse{
+
     out:=&ApiKeyMessage{}
     c.Get(context.Background(), "APIKey", out, true)
     log.Infof("Passthrough with key %s", out.Key)
+
+
+    log.Infof("Request Headers: %v", req.GetAttributes().GetRequest().GetHttp().GetHeaders())
+    log.Infof("Query String: %v", req.GetAttributes().GetRequest().GetHttp().GetQuery())
+    log.Infof("Context Extensions: %+v", req.GetAttributes().GetContextExtensions())
 
     ret:=&auth.CheckResponse{
         Status: &rpcstatus.Status{
