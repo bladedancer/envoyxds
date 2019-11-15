@@ -2,8 +2,26 @@
 
 
 [[projects]]
+  name = "github.com/PuerkitoBio/purell"
+  packages = ["."]
+  revision = "44968752391892e1b0d0b821ee79e9a85fa13049"
+  version = "v1.1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/PuerkitoBio/urlesc"
+  packages = ["."]
+  revision = "de5bf2ad457846296e2031421a34e2568e304e35"
+
+[[projects]]
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
+
+[[projects]]
   name = "github.com/envoyproxy/go-control-plane"
-  packages = ["envoy/api/v2","envoy/api/v2/auth","envoy/api/v2/cluster","envoy/api/v2/core","envoy/api/v2/endpoint","envoy/api/v2/listener","envoy/api/v2/route","envoy/config/accesslog/v2","envoy/config/filter/accesslog/v2","envoy/config/filter/http/lua/v2","envoy/config/filter/network/http_connection_manager/v2","envoy/service/auth/v2","envoy/service/discovery/v2","envoy/type","envoy/type/matcher","pkg/cache","pkg/conversion","pkg/log","pkg/server","pkg/wellknown"]
+  packages = ["envoy/api/v2","envoy/api/v2/auth","envoy/api/v2/cluster","envoy/api/v2/core","envoy/api/v2/endpoint","envoy/api/v2/listener","envoy/api/v2/route","envoy/config/accesslog/v2","envoy/config/filter/accesslog/v2","envoy/config/filter/http/ext_authz/v2","envoy/config/filter/http/lua/v2","envoy/config/filter/network/http_connection_manager/v2","envoy/service/auth/v2","envoy/service/discovery/v2","envoy/type","envoy/type/matcher","pkg/cache","pkg/conversion","pkg/log","pkg/server","pkg/wellknown"]
   revision = "52b167a709f111e6298136064bbaae43419ab22f"
   version = "v0.9.0"
 
@@ -20,10 +38,64 @@
   version = "v1.4.7"
 
 [[projects]]
+  name = "github.com/go-openapi/analysis"
+  packages = [".","internal"]
+  revision = "1024f3482ddc2c381cc918eb9eca596d51a70272"
+  version = "v0.19.6"
+
+[[projects]]
+  name = "github.com/go-openapi/errors"
+  packages = ["."]
+  revision = "0b2a0a1f89aa2eec2d13e03cd80ab0fdaf01f8ce"
+  version = "v0.19.2"
+
+[[projects]]
+  name = "github.com/go-openapi/jsonpointer"
+  packages = ["."]
+  revision = "ed123515f087412cd7ef02e49b0b0a5e6a79a360"
+  version = "v0.19.3"
+
+[[projects]]
+  name = "github.com/go-openapi/jsonreference"
+  packages = ["."]
+  revision = "82f31475a8f7a12bc26962f6e26ceade8ea6f66a"
+  version = "v0.19.3"
+
+[[projects]]
+  name = "github.com/go-openapi/loads"
+  packages = ["."]
+  revision = "bda4742c39071f7804171d847fb6e9bca84f9f57"
+  version = "v0.19.4"
+
+[[projects]]
+  name = "github.com/go-openapi/spec"
+  packages = ["."]
+  revision = "8557d72e4f077c2dbe1e48df09e596b6fb9b7991"
+  version = "v0.19.4"
+
+[[projects]]
+  name = "github.com/go-openapi/strfmt"
+  packages = ["."]
+  revision = "6faa644e1cdafc07f7b38eb06c1af5f92128f289"
+  version = "v0.19.3"
+
+[[projects]]
+  name = "github.com/go-openapi/swag"
+  packages = ["."]
+  revision = "c3d0f7896d589f3babb99eea24bbc7de98108e72"
+  version = "v0.19.5"
+
+[[projects]]
   name = "github.com/go-redis/redis"
   packages = [".","internal","internal/consistenthash","internal/hashtag","internal/pool","internal/proto","internal/util"]
   revision = "7f69d5e32072d151eb6936cbe2306413e8117488"
   version = "v6.15.6"
+
+[[projects]]
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
 
 [[projects]]
   name = "github.com/gogo/googleapis"
@@ -56,6 +128,12 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/copier"
+  packages = ["."]
+  revision = "b57f9002281ac48ed8cbc489b1e91121e1a0824c"
+
+[[projects]]
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
   revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
@@ -72,6 +150,12 @@
   packages = ["."]
   revision = "de8848e004dd33dc07a2947b3d76f618a7fc7ef1"
   version = "v1.8.1"
+
+[[projects]]
+  name = "github.com/mailru/easyjson"
+  packages = ["buffer","jlexer","jwriter"]
+  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
+  version = "v0.7.0"
 
 [[projects]]
   name = "github.com/mitchellh/mapstructure"
@@ -134,6 +218,12 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "go.mongodb.org/mongo-driver"
+  packages = ["bson","bson/bsoncodec","bson/bsonrw","bson/bsontype","bson/primitive","x/bsonx/bsoncore"]
+  revision = "797e0a635920c291b1808180bf7249eaac5eafed"
+  version = "v1.1.3"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","http/httpguts","http2","http2/hpack","idna","internal/timeseries","trace"]
@@ -143,11 +233,11 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "59a1497f0cead4659791683f1514d15ae8cf3934"
+  revision = "4c7a9d0fe056d9d1de37e1409ca8a5c17accb46a"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/language","internal/language/compact","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/language","internal/language/compact","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
   revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
   version = "v0.3.2"
 
@@ -155,7 +245,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/api/annotations","googleapis/rpc/status"]
-  revision = "16a3f7862a1a494c52b23987ef8a993fd3f9a85e"
+  revision = "6bbd007550de91f00332b51032ea2cd88b87e799"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -172,6 +262,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8e47f23b9ecbab72e22d355750cc08bd9ee86007890fe4f6c0d7837e971fb3b8"
+  inputs-digest = "3f78c22087ca8e84582c1c71672e94348ebc186c406145f7bd7167b0428fae17"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/spec"
+	"github.com/jinzhu/copier"
 	_ "github.com/lib/pq" // Need postgres
 )
 
@@ -154,19 +157,14 @@ func getFrontendDetails(proxyRow *_ProxyRow) (string, []apimgmt.Authorization) {
 
 func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 	// Brittle but it's a POC
-	schemes := []interface{}{}
 	tls := false
 	port := uint32(80)
 	host := "localhost"
 	basePath := ""
 
-	if proxyRow.Swagger["schemes"] != nil {
-		schemes = proxyRow.Swagger["schemes"].([]interface{})
-	}
-
-	if len(schemes) > 0 {
-		for _, scheme := range schemes {
-			if strings.EqualFold(scheme.(string), "https") {
+	if proxyRow.Swagger.Schemes != nil && len(proxyRow.Swagger.Schemes) > 0 {
+		for _, scheme := range proxyRow.Swagger.Schemes {
+			if strings.EqualFold(scheme, "https") {
 				tls = true
 				port = 443
 				break
@@ -174,8 +172,8 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 		}
 	}
 
-	if proxyRow.Swagger["host"] != nil {
-		hostAndPort := strings.Split(proxyRow.Swagger["host"].(string), ":")
+	if len(proxyRow.Swagger.Host) > 0 {
+		hostAndPort := strings.Split(proxyRow.Swagger.Host, ":")
 		host = hostAndPort[0]
 		if len(hostAndPort) == 2 {
 			p, err := strconv.Atoi(hostAndPort[1])
@@ -186,8 +184,8 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 		}
 	}
 
-	if proxyRow.Swagger["basePath"] != nil {
-		basePath = proxyRow.Swagger["basePath"].(string)
+	if len(proxyRow.Swagger.BasePath) > 0 {
+		basePath = proxyRow.Swagger.BasePath
 	}
 
 	return host, port, basePath, tls
@@ -222,7 +220,7 @@ type _ProxyRow struct {
 	Name          string
 	BasePath      string
 	Authorization _Attrs
-	Swagger       _Attrs
+	Swagger       *_Swagger
 	Created       time.Time
 	Updated       time.Time
 }
@@ -240,4 +238,23 @@ func (a *_Attrs) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(b, &a)
+}
+
+type _Swagger spec.Swagger
+
+func (s *_Swagger) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	data := value.([]byte)
+	doc, err := loads.Analyzed(json.RawMessage(data), "")
+	if err != nil {
+		return err
+	}
+
+	copier.Copy(s, doc.Spec())
+
+	log.Infof("%+v", s)
+	return err
 }
