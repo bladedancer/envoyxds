@@ -9,6 +9,7 @@ import (
     "golang.org/x/net/context"
     "github.com/golang/protobuf/ptypes"
 )
+
 func checkAgainstScheme(req *auth.CheckRequest) *auth.CheckResponse{
 
     out:=&ApiKeyMessage{}
@@ -20,22 +21,37 @@ func checkAgainstScheme(req *auth.CheckRequest) *auth.CheckResponse{
     log.Infof("Query String: %v", req.GetAttributes().GetRequest().GetHttp().GetQuery())
     log.Infof("Context Extensions: %+v", req.GetAttributes().GetContextExtensions())
 
-    ret:=&auth.CheckResponse{
-        Status: &rpcstatus.Status{
-            Code: int32(0),
-        },
-        HttpResponse: &auth.CheckResponse_OkResponse{
-            OkResponse: &auth.OkHttpResponse{
-                Headers: []*core.HeaderValueOption{
-                    {
-                        Header: &core.HeaderValue{
-                            Key:   "x-custom-header-from-authz",
-                            Value: out.Key,
+    extensions:=req.GetAttributes().GetContextExtensions()
+    var ret *auth.CheckResponse
+    switch extensions["auth_type"] {
+    case "apiKey":
+        //TODOO
+    case "basic":
+        //TODOO
+    case "oauth":
+        //TODOO
+    case "opa":
+        //TODOO
+    case "custom":
+        //TODOO
+    default:
+        ret = &auth.CheckResponse{
+            Status: &rpcstatus.Status{
+                Code: int32(0),
+            },
+            HttpResponse: &auth.CheckResponse_OkResponse{
+                OkResponse: &auth.OkHttpResponse{
+                    Headers: []*core.HeaderValueOption{
+                        {
+                            Header: &core.HeaderValue{
+                                Key:   "x-custom-header-from-authz",
+                                Value: out.Key,
+                            },
                         },
                     },
                 },
             },
-        },
+        }
     }
     return ret
     }
