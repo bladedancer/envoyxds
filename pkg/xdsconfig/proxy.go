@@ -35,7 +35,7 @@ func MakeProxy(tenantName string, proxy *apimgmt.Proxy) *Proxy {
 // match on the basepath/
 func makeRoute(tenantName string, proxy *apimgmt.Proxy) []*route.Route {
 	clusterID := fmt.Sprintf("t_%s-p_%s", tenantName, proxy.Name)
-	extAuthConfig := makeExtAuthzConfig(proxy.Frontend.Authorization)
+	extAuthConfig := makeExtAuthzConfig(tenantName, proxy)
 
 	// Exact match on basepath
 	exactRoute := &route.Route{
@@ -156,59 +156,75 @@ func makeCluster(tenantName string, proxy *apimgmt.Proxy) *api.Cluster {
 }
 
 // makeExtAuthzConfig Create the per route config overrides for external authorization.
-func makeExtAuthzConfig(authorizations []apimgmt.Authorization) *_struct.Struct {
+func makeExtAuthzConfig(tenantName string, proxy *apimgmt.Proxy) *_struct.Struct {
 	var config *ext_authz.ExtAuthzPerRoute
+	callAuthz := false // Only need to call it if we have authorization
 
-	if authorizations == nil || len(authorizations) == 0 {
-		// In the future we may want to call out to the filter to do more than
-		// frontend auth...in which case we wouldn't be disabling the filter for
-		// passthrough....but for now it's a nice example.
+	// Common ExtAuthz params
+	checkSettings := map[string]string{
+		"tenant": tenantName,
+		"proxy":  proxy.Name,
+	}
+
+	// Frontend authorization
+	if proxy.Frontend.Authorization != nil && len(proxy.Frontend.Authorization) > 0 {
+		// TODO: Handle scenario where we have multiple frontend auth profiles....
+		// will it still be more efficient to store the data statically on the route
+		// and pass it to the auth server?
+		authorization := proxy.Frontend.Authorization[0]
+		switch authorization.Type() {
+		case apimgmt.AuthorizationTypePassthrough:
+			// Noop
+		case apimgmt.AuthorizationTypeAPIKey:
+			typedAuth := authorization.(*apimgmt.APIKeyAuthorization)
+			checkSettings["auth_type"] = (string)(typedAuth.Type())
+			checkSettings["auth_in"] = typedAuth.Location
+			checkSettings["auth_name"] = typedAuth.Name
+			callAuthz = true
+		case apimgmt.AuthorizationTypeHTTP:
+			typedAuth := authorization.(*apimgmt.HTTPAuthorization)
+			checkSettings["auth_type"] = (string)(typedAuth.Type())
+			checkSettings["auth_scheme"] = typedAuth.Scheme
+			callAuthz = true
+		}
+	}
+
+	// Backend authorization
+	if proxy.Backend.Authorization != nil {
+		// This is very crude, in reality the user probably has a credential store and
+		// as part of the proxy configuration they'll associate them with the proxy. Also
+		// need to support multiple backend credentials.
+		switch proxy.Backend.Authorization.Type() {
+		case apimgmt.AuthorizationTypePassthrough:
+			// Noop
+		case apimgmt.AuthorizationTypeAPIKey:
+			typedAuth := proxy.Backend.Authorization.(*apimgmt.APIKeyAuthorization)
+			checkSettings["be_type"] = (string)(typedAuth.Type())
+			checkSettings["be_in"] = typedAuth.Location
+			checkSettings["be_name"] = typedAuth.Name
+			callAuthz = true
+		case apimgmt.AuthorizationTypeHTTP:
+			typedAuth := proxy.Backend.Authorization.(*apimgmt.HTTPAuthorization)
+			checkSettings["be_type"] = (string)(typedAuth.Type())
+			checkSettings["be_scheme"] = typedAuth.Scheme
+			callAuthz = true
+		}
+	}
+
+	// Override the authorizaiton
+	if callAuthz {
+		config = &ext_authz.ExtAuthzPerRoute{
+			Override: &ext_authz.ExtAuthzPerRoute_CheckSettings{
+				CheckSettings: &ext_authz.CheckSettings{
+					ContextExtensions: checkSettings,
+				},
+			},
+		}
+	} else {
 		config = &ext_authz.ExtAuthzPerRoute{
 			Override: &ext_authz.ExtAuthzPerRoute_Disabled{
 				Disabled: true,
 			},
-		}
-	} else {
-		// TODO: Handle scenario where we have multiple frontend auth profiles....
-		// will it still be more efficient to store the data statically on the route
-		// and pass it to the auth server?
-		authorization := authorizations[0]
-
-		switch authorization.Type() {
-		case apimgmt.AuthorizationTypePassthrough:
-			// In the future we may want to call out to the filter to do more than
-			// frontend auth...in which case we wouldn't be disabling the filter for
-			// passthrough....but for now it's a nice example.
-			config = &ext_authz.ExtAuthzPerRoute{
-				Override: &ext_authz.ExtAuthzPerRoute_Disabled{
-					Disabled: true,
-				},
-			}
-		case apimgmt.AuthorizationTypeAPIKey:
-			typedAuth := authorization.(*apimgmt.APIKeyAuthorization)
-			config = &ext_authz.ExtAuthzPerRoute{
-				Override: &ext_authz.ExtAuthzPerRoute_CheckSettings{
-					CheckSettings: &ext_authz.CheckSettings{
-						ContextExtensions: map[string]string{
-							"auth_type": (string)(typedAuth.Type()),
-							"auth_in":   typedAuth.Location,
-							"auth_name": typedAuth.Name,
-						},
-					},
-				},
-			}
-		case apimgmt.AuthorizationTypeHTTP:
-			typedAuth := authorization.(*apimgmt.HTTPAuthorization)
-			config = &ext_authz.ExtAuthzPerRoute{
-				Override: &ext_authz.ExtAuthzPerRoute_CheckSettings{
-					CheckSettings: &ext_authz.CheckSettings{
-						ContextExtensions: map[string]string{
-							"auth_type":   (string)(typedAuth.Type()),
-							"auth_scheme": typedAuth.Scheme,
-						},
-					},
-				},
-			}
 		}
 	}
 

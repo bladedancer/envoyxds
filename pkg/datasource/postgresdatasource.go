@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/spec"
+	"github.com/jinzhu/copier"
 	_ "github.com/lib/pq" // Need postgres
 )
 
@@ -116,7 +119,7 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 			}
 
 			feBasePath, authorizations := getFrontendDetails(proxyRow)
-			host, port, beBasePath, tls := getBackendDetails(proxyRow)
+			host, port, beBasePath, tls, beAuthorization := getBackendDetails(proxyRow)
 
 			// Create the proxy
 			proxy := &apimgmt.Proxy{
@@ -126,10 +129,11 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 					Authorization: authorizations,
 				},
 				Backend: &apimgmt.Backend{
-					Host: host,
-					Path: beBasePath,
-					Port: port,
-					TLS:  tls,
+					Host:          host,
+					Path:          beBasePath,
+					Port:          port,
+					TLS:           tls,
+					Authorization: beAuthorization,
 				},
 			}
 
@@ -152,21 +156,18 @@ func getFrontendDetails(proxyRow *_ProxyRow) (string, []apimgmt.Authorization) {
 	return proxyRow.BasePath, []apimgmt.Authorization{authorization}
 }
 
-func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
+func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool, apimgmt.Authorization) {
 	// Brittle but it's a POC
-	schemes := []interface{}{}
 	tls := false
 	port := uint32(80)
 	host := "localhost"
 	basePath := ""
+	var authorization apimgmt.Authorization
+	authorization = &apimgmt.PassthroughAuthorization{}
 
-	if proxyRow.Swagger["schemes"] != nil {
-		schemes = proxyRow.Swagger["schemes"].([]interface{})
-	}
-
-	if len(schemes) > 0 {
-		for _, scheme := range schemes {
-			if strings.EqualFold(scheme.(string), "https") {
+	if proxyRow.Swagger.Schemes != nil && len(proxyRow.Swagger.Schemes) > 0 {
+		for _, scheme := range proxyRow.Swagger.Schemes {
+			if strings.EqualFold(scheme, "https") {
 				tls = true
 				port = 443
 				break
@@ -174,8 +175,8 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 		}
 	}
 
-	if proxyRow.Swagger["host"] != nil {
-		hostAndPort := strings.Split(proxyRow.Swagger["host"].(string), ":")
+	if len(proxyRow.Swagger.Host) > 0 {
+		hostAndPort := strings.Split(proxyRow.Swagger.Host, ":")
 		host = hostAndPort[0]
 		if len(hostAndPort) == 2 {
 			p, err := strconv.Atoi(hostAndPort[1])
@@ -186,11 +187,55 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool) {
 		}
 	}
 
-	if proxyRow.Swagger["basePath"] != nil {
-		basePath = proxyRow.Swagger["basePath"].(string)
+	if len(proxyRow.Swagger.BasePath) > 0 {
+		basePath = proxyRow.Swagger.BasePath
 	}
 
-	return host, port, basePath, tls
+	if len(proxyRow.Swagger.SwaggerProps.SecurityDefinitions) > 0 {
+		// This is a huge hack. We don't have route per operations in the PoC
+		// and we don't support AND/OR on the security scheme.....it's just a PoC.
+		var scheme *spec.SecurityScheme
+		for _, s := range proxyRow.Swagger.SwaggerProps.SecurityDefinitions {
+			// Just grabbing the first security scheme in the definition as the default....
+			if s.Type != "oauth2" {
+				scheme = s
+				break
+			}
+		}
+
+		// If there is a global security definition then use it....kinda, again not
+		// supporting AND/OR....it's all very dodgy.
+		if len(proxyRow.Swagger.SwaggerProps.Security) > 0 {
+			// Really taking short cuts with the spec here...but it's just a PoC,
+			// No AND/OR support - taking the one scheme and applying across the board
+			for security := range proxyRow.Swagger.SwaggerProps.Security[0] {
+				s := proxyRow.Swagger.SwaggerProps.SecurityDefinitions[security]
+				// Just grabbing the first security scheme
+				if s.Type != "oauth2" {
+					scheme = s
+					break
+				}
+			}
+		}
+
+		if scheme != nil {
+			switch scheme.Type {
+			case "apiKey":
+				authorization = &apimgmt.APIKeyAuthorization{
+					Name:     scheme.Name,
+					Location: scheme.In,
+				}
+			case "basic":
+				authorization = &apimgmt.HTTPAuthorization{
+					Scheme: "basic",
+				}
+			case "oauth2":
+				log.Error("Didn't implement oauth2 for backends, try next one....")
+			}
+		}
+	}
+
+	return host, port, basePath, tls, authorization
 }
 
 // getFrontendAuthorization Convert the auth details to an Authorization
@@ -222,7 +267,7 @@ type _ProxyRow struct {
 	Name          string
 	BasePath      string
 	Authorization _Attrs
-	Swagger       _Attrs
+	Swagger       *_Swagger
 	Created       time.Time
 	Updated       time.Time
 }
@@ -240,4 +285,20 @@ func (a *_Attrs) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(b, &a)
+}
+
+type _Swagger spec.Swagger
+
+func (s *_Swagger) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	data := value.([]byte)
+	doc, err := loads.Analyzed(json.RawMessage(data), "")
+	if err != nil {
+		return err
+	}
+	copier.Copy(s, doc.Spec())
+	return err
 }

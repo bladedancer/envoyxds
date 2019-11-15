@@ -6,7 +6,7 @@ type Backend struct {
 	Port          uint32
 	Path          string
 	TLS           bool
-	Authorization *Authorization
+	Authorization Authorization
 }
 
 // Frontend The proxy frontend details.
