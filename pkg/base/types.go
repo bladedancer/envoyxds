@@ -19,12 +19,15 @@ type Config struct {
 	DatabaseURL    string
 	DatabasePoll   int
 	UseProxyProto  bool
+	CacheHost      string
 }
+
 //CacheConfig defines the cfg for cache implementation
 type CacheConfig struct {
-    Port           uint32
-    Path           string
+	Port uint32
+	Path string
 }
+
 var config *Config
 var cachecfg *CacheConfig
 var logger *logrus.Logger
@@ -42,21 +45,22 @@ func GetLog(name string) logrus.FieldLogger {
 
 // SetConfig sets the config for the package.
 func SetConfig(c *Config) {
-    config = c
-    return
+	config = c
+	return
 }
 
 // GetConfig returns the current config.
 func GetConfig() *Config {
-    return config
+	return config
 }
+
 // SetCacheConfig sets the config for the package.
 func SetCacheConfig(c *CacheConfig) {
-    cachecfg = c
-    return
+	cachecfg = c
+	return
 }
 
 // GetCacheConfig returns the current config.
 func GetCacheConfig() *CacheConfig {
-    return cachecfg
+	return cachecfg
 }

@@ -105,7 +105,7 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 
 	for _, tenant := range updatedTenants {
 		log.Infof("Loading tenant [%s] updates", tenant)
-		rows, err := ds.db.Query("SELECT id, tenant_name, base_path, auth, swagger FROM proxy WHERE tenant_name = $1", tenant)
+		rows, err := ds.db.Query("SELECT id, tenant_name, base_path, auth, cred, swagger FROM proxy WHERE tenant_name = $1", tenant)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -113,13 +113,13 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 		proxies := []*apimgmt.Proxy{}
 		for rows.Next() {
 			proxyRow := new(_ProxyRow)
-			err = rows.Scan(&proxyRow.ID, &proxyRow.Name, &proxyRow.BasePath, &proxyRow.Authorization, &proxyRow.Swagger)
+			err = rows.Scan(&proxyRow.ID, &proxyRow.Name, &proxyRow.BasePath, &proxyRow.Authorization, &proxyRow.Credential, &proxyRow.Swagger)
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			feBasePath, authorizations := getFrontendDetails(proxyRow)
-			host, port, beBasePath, tls, beAuthorization := getBackendDetails(proxyRow)
+			host, port, beBasePath, tls, beAuthorization, beCredential := getBackendDetails(proxyRow)
 
 			// Create the proxy
 			proxy := &apimgmt.Proxy{
@@ -134,6 +134,7 @@ func (ds *PostgresDatasource) loadTenants() ([]*apimgmt.Tenant, time.Time) {
 					Port:          port,
 					TLS:           tls,
 					Authorization: beAuthorization,
+					Credential:    beCredential,
 				},
 			}
 
@@ -156,7 +157,7 @@ func getFrontendDetails(proxyRow *_ProxyRow) (string, []apimgmt.Authorization) {
 	return proxyRow.BasePath, []apimgmt.Authorization{authorization}
 }
 
-func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool, apimgmt.Authorization) {
+func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool, apimgmt.Authorization, map[string]string) {
 	// Brittle but it's a POC
 	tls := false
 	port := uint32(80)
@@ -235,7 +236,15 @@ func getBackendDetails(proxyRow *_ProxyRow) (string, uint32, string, bool, apimg
 		}
 	}
 
-	return host, port, basePath, tls, authorization
+	// Backend Credential
+	beCredential := make(map[string]string)
+	if proxyRow.Credential != nil && len(proxyRow.Credential) > 0 {
+		for key, value := range proxyRow.Credential {
+			beCredential[key] = value.(string)
+		}
+	}
+
+	return host, port, basePath, tls, authorization, beCredential
 }
 
 // getFrontendAuthorization Convert the auth details to an Authorization
@@ -267,6 +276,7 @@ type _ProxyRow struct {
 	Name          string
 	BasePath      string
 	Authorization _Attrs
+	Credential    _Attrs
 	Swagger       *_Swagger
 	Created       time.Time
 	Updated       time.Time

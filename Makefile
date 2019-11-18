@@ -48,7 +48,7 @@ PROTOALLTARGETS := $(PROTOTARGETS)
 
 %.pb.go %.pb.gw.go %.swagger.json: %.proto
 	@echo $<
-	@protoc -I ./vendor -I . --go_out=Mgoogle/protobuf/any.proto=github.com/golang/protobuf/ptypes/any,plugins=grpc:. pkg/authz/authz.proto
+	@protoc -I ./vendor -I . --go_out=Mgoogle/protobuf/any.proto=github.com/golang/protobuf/ptypes/any,plugins=grpc:. $<
 #	@protoc $(PROTOOPTS) $(GOPATH)/src/$(REPO)/$<
 #	@docker run -i --rm  -v "$(WORKSPACE):/go/src/$(PKG)" \
 #	-u $$(id -u):$$(id -g)                    \

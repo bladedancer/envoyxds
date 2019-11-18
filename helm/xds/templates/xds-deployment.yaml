@@ -48,6 +48,8 @@ spec:
             value: "{{ .Values.xds.databaseUrl }}"
           - name: XDS_USEPROXYPROTO
             value: "{{ .Values.xds.useProxyProto }}"
+          - name: XDS_CACHEHOST
+            value: "{{ .Values.xds.cacheHost }}"
         ports:
         - containerPort: 12000
           name: xds

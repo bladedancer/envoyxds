@@ -37,6 +37,7 @@ func init() {
 	RootCmd.Flags().String("databaseUrl", "postgres://postgres:postgres@localhost/gateway?sslmode=disable", "The database connection url.")
 	RootCmd.Flags().Int("databasePoll", 30, "Poll the database for updates every n seconds.")
 	RootCmd.Flags().Bool("useProxyProto", false, "Required if deploying to aws with aws-load-balancer-proxy-protocol annotation enabled.")
+	RootCmd.Flags().String("cacheHost", "localhost:6379", "The host and port for the cache.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
 	bindOrPanic("path", RootCmd.Flags().Lookup("path"))
@@ -53,6 +54,7 @@ func init() {
 	bindOrPanic("databaseUrl", RootCmd.Flags().Lookup("databaseUrl"))
 	bindOrPanic("databasePoll", RootCmd.Flags().Lookup("databasePoll"))
 	bindOrPanic("useProxyProto", RootCmd.Flags().Lookup("useProxyProto"))
+	bindOrPanic("cacheHost", RootCmd.Flags().Lookup("cacheHost"))
 }
 
 func initConfig() {

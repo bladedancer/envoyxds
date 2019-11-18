@@ -7,6 +7,7 @@ type Backend struct {
 	Path          string
 	TLS           bool
 	Authorization Authorization
+	Credential    map[string]string
 }
 
 // Frontend The proxy frontend details.

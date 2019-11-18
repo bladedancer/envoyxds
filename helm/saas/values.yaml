@@ -5,10 +5,15 @@ xds:
     pumpInterval: 0               # a new tenant is added every n seconds. Set to 0 to disable.
     shards: 3                     # must match replicaCount
     repo: bladedancer                      # Where to pull from
+    cacheHost: "saas-redis-master:6379"
     databaseUrl: postgres://postgres:postgres@saas-postgresql/gateway?sslmode=disable
     domain: bladedancer.dynu.net  # change to your domain
     #domain: gm-envoy.moloko.apic-k8s.axwaytest.net  # change to your domain
     #useProxyProto: true # MUST be true if annotated with service.beta.kubernetes.io/aws-load-balancer-proxy-protocol
+
+authz:
+  authz:
+    repo: bladedancer
 
 back:
   envoyss:

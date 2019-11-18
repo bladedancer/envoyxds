@@ -1,9 +1,12 @@
 package xds
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/bladedancer/envoyxds/pkg/apimgmt"
+	redis "github.com/bladedancer/envoyxds/pkg/cache"
 	"github.com/bladedancer/envoyxds/pkg/datasource"
 	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -28,6 +31,20 @@ func updateShard(snapshotCache cache.SnapshotCache, shard xdsconfig.Shard) error
 	return err
 }
 
+func updateCredentials(tenants ...*apimgmt.Tenant) {
+	// Obviously not ideal to not detect credential updates separately from any other tenant update
+	// but it'll do for now....seem to be writing that a lot.
+	if tenants != nil {
+		for _, tenant := range tenants {
+			for _, proxy := range tenant.Proxies {
+				if proxy.Backend.Credential != nil {
+					cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
+				}
+			}
+		}
+	}
+}
+
 func watch(snapshotCache cache.SnapshotCache) {
 	// Frontend is static for now
 	frontend = xdsconfig.MakeFrontendShard("front")
@@ -46,9 +63,15 @@ func watch(snapshotCache cache.SnapshotCache) {
 	tenants, updateChan := datasource.TenantDatasource.GetTenants()
 	go func() {
 		for tenants := range updateChan {
+			// There'd be an sync concern here in the real world.
 			deploymentManager.AddTenants(tenants...)
+			updateCredentials(tenants...)
 		}
 	}()
 
+	// Update BE credentials in Redis
+	updateCredentials(tenants...)
+
+	// Update deployments
 	deploymentManager.AddTenants(tenants...)
 }

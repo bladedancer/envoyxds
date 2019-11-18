@@ -20,6 +20,7 @@ func syncConfigFromViper() base.Config {
 		DatabaseURL:    viper.GetString("databaseUrl"),
 		DatabasePoll:   viper.GetInt("databasePoll"),
 		UseProxyProto:  viper.GetBool("useProxyProto"),
+		CacheHost:      viper.GetString("cacheHost"),
 	}
 }
 
