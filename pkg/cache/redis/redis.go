@@ -23,7 +23,7 @@ type redis struct {
     connected  bool
     }
 
-// New returns an redis implementation of storage.Interface
+// New returns an redis implementation of cache.Cache Interface
 func New(endpoints []string, prefix string, timeout time.Duration) cache.Cache {
     return &redis{endpoints: endpoints, pathPrefix: prefix, timeout: timeout}
 }
