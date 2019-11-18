@@ -5,13 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "XDS Launch",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/envoyxds",
             "env": {},
-            "args": []
+            "args": ["--pump", "0"]
+        },
+        {
+            "name": "Authz Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/authz",
+            "env": {},
+            "args": ["--path", "localhost:6379", "--port", "48084"]
         }
+
     ]
 }

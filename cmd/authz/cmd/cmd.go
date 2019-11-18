@@ -3,10 +3,11 @@ package cmd
 import (
 	"strings"
 
+	"github.com/bladedancer/envoyxds/pkg/authz"
+	"github.com/bladedancer/envoyxds/pkg/cache/redis"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
-    "github.com/bladedancer/envoyxds/pkg/authz"
 )
 
 // RootCmd configures the command params of the csa
@@ -48,5 +49,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	setupConfig()
+	authz.Init()
+	redis.Init()
+
 	return authz.Run()
 }
