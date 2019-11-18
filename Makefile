@@ -20,7 +20,7 @@ lint: ## Lint the files
 	@golint	-set_exit_status	${PKG_LIST}
 
 build: ## Build the binary for linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build	-o ./bin/$(BIN)	./cmd/$(BIN)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build	 -o ./bin/$(BIN)	./cmd/$(BIN)
 
 docker-build: ## Build docker image
 	docker build -f ./cmd/$(BIN)/Dockerfile -t $(REGISTRY)/$(BIN):latest	.
@@ -48,14 +48,13 @@ PROTOALLTARGETS := $(PROTOTARGETS)
 
 %.pb.go %.pb.gw.go %.swagger.json: %.proto
 	@echo $<
+	@protoc -I ./vendor -I . --go_out=Mgoogle/protobuf/any.proto=github.com/golang/protobuf/ptypes/any,plugins=grpc:. pkg/authz/authz.proto
 #	@protoc $(PROTOOPTS) $(GOPATH)/src/$(REPO)/$<
-
-	@docker run -i --rm  -v "$(WORKSPACE):/go/src/$(PKG)" \
-	-u $$(id -u):$$(id -g)                    \
-	chrisccoy/golang-gw:1.0.0 	protoc \
-	-I /go/src -I/go/src/$(PKG)/vendor \
-	--go_out=plugins=grpc:/go/src  \
-	/go/src/$(PKG)/$<
+#	@docker run -i --rm  -v "$(WORKSPACE):/go/src/$(PKG)" \
+#	-u $$(id -u):$$(id -g)                    \
+#	chrisccoy/golang-gw:1.3.0 	protoc-gen-go \
+#	-I /go/src/${PKG} -I/go/src/$(PKG)/vendor \
+#	--go_out=Mgoogle/protobuf/any.proto=github.com/golang/protobuf/ptypes/any,plugins=grpc:/go/src  \
+#	/go/src/$(PKG)/$<
 
 protoc: $(PROTOALLTARGETS)
-
