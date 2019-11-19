@@ -38,7 +38,7 @@ func updateCredentials(tenants ...*apimgmt.Tenant) {
 		for _, tenant := range tenants {
 			for _, proxy := range tenant.Proxies {
 				if proxy.Backend.Credential != nil {
-					cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
+					cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s-creds", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
 				}
 			}
 		}
