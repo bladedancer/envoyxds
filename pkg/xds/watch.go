@@ -10,6 +10,8 @@ import (
 	"github.com/bladedancer/envoyxds/pkg/datasource"
 	"github.com/bladedancer/envoyxds/pkg/xdsconfig"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 )
 
 var frontend *xdsconfig.FrontendShard
@@ -40,6 +42,32 @@ func updateCredentials(tenants ...*apimgmt.Tenant) {
 				if proxy.Backend.Credential != nil {
 					cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s-creds", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
 				}
+
+				if proxy.Frontend.Authorization != nil && len(proxy.Frontend.Authorization) > 0 {
+					// TODO: Multiple frontend auth etc.
+					var authorization = proxy.Frontend.Authorization[0]
+					var auth *any.Any
+					var err error
+
+					switch authorization.Type() {
+					case apimgmt.AuthorizationTypeAPIKey:
+						typedAuth := authorization.(*apimgmt.APIKeyAuthorization)
+						auth, err = ptypes.MarshalAny(&redis.ApiKeyMessage{Key: typedAuth.Key})
+					case apimgmt.AuthorizationTypeHTTP:
+						log.Info("HTTP Authorization not done.")
+						// TODO:
+						// auth, err = ptypes.MarshalAny(&cache.ApiKeyMessage{Key: "Gavin 1 API Key"})
+					}
+
+					if err != nil && auth != nil {
+						key := fmt.Sprintf("%s-%s-%s", tenant.Name, proxy.Name, authorization.Type())
+						err = cacheCon.Set(context.Background(), key, &redis.AuthEnvelope{CtxType: redis.ChangeType_API, Context: auth}, 0)
+					}
+
+					if err != nil {
+						log.Error(err)
+					}
+				}
 			}
 		}
 	}
@@ -69,7 +97,7 @@ func watch(snapshotCache cache.SnapshotCache) {
 		}
 	}()
 
-	// Update BE credentials in Redis
+	// Update FE & BE credentials in Redis
 	updateCredentials(tenants...)
 
 	// Update deployments

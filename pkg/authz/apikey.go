@@ -3,17 +3,18 @@ package authz
 import (
 	"fmt"
 
+	"context"
+    "github.com/bladedancer/envoyxds/pkg/cache"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
-    "context"
 )
 
 const apiScheme = "apikey"
 
 type apikey struct {
-    hdrs map[string]string
-    query string
-    authIn string
-	auth *AuthEnvelope
+	hdrs   map[string]string
+	query  string
+	authIn string
+	auth   *cache.AuthEnvelope
 }
 
 //NewAPIKey returns new authorization interface
@@ -33,29 +34,28 @@ func NewAPIKey(req *auth.CheckRequest) Authorization {
 	if len(ext) > 0 {
 		key = fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
 	}
-	envelope:=&AuthEnvelope{}
-	log.Infof("Looking in the Cache %s", key )
-	c.Get(context.Background(), key, envelope,true)
+	envelope := &cache.AuthEnvelope{}
+	log.Infof("Looking in the Cache %s", key)
+	c.Get(context.Background(), key, envelope, true)
 	log.Infof("Result from Cache %v", envelope)
 
-
-	return &apikey{hdrs:hdrs , query:query,auth: envelope}
+	return &apikey{hdrs: hdrs, query: query, auth: envelope}
 }
 func determineExtractKey(authIn string, hdrs map[string]string, query string) string {
-    apiKey:=""
-    switch authIn {
-    case "header":
-        apiKey=hdrs["x-api-key"]
-    case "query":
-        //Not Implemented
-    }
-    return apiKey
+	apiKey := ""
+	switch authIn {
+	case "header":
+		apiKey = hdrs["x-api-key"]
+	case "query":
+		//Not Implemented
+	}
+	return apiKey
 }
 
 //Authorize *auth.CheckResponse
 func (a *apikey) Authorize() bool {
-    apiKey:=determineExtractKey(a.authIn, a.hdrs, a.query)
-    apiCtx:=getAPIContext(a.auth)
-    log.Infof("Comparing Key %s from Header to cached Key %s ", apiKey, apiCtx.Key)
-	return apiKey==apiCtx.Key
+	apiKey := determineExtractKey(a.authIn, a.hdrs, a.query)
+	apiCtx := getAPIContext(a.auth)
+	log.Infof("Comparing Key %s from Header to cached Key %s ", apiKey, apiCtx.Key)
+	return apiKey == apiCtx.Key
 }
