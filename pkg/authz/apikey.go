@@ -45,7 +45,7 @@ func determineExtractKey(authIn string, hdrs map[string]string, query string) st
     apiKey:=""
     switch authIn {
     case "header":
-        apiKey=hdrs["X-API-KEY"]
+        apiKey=hdrs["x-api-key"]
     case "query":
         //Not Implemented
     }
