@@ -59,7 +59,7 @@ func updateCredentials(tenants ...*apimgmt.Tenant) {
 						// auth, err = ptypes.MarshalAny(&cache.ApiKeyMessage{Key: "Gavin 1 API Key"})
 					}
 
-					if err != nil && auth != nil {
+					if err == nil && auth != nil {
 						key := fmt.Sprintf("%s-%s-%s", tenant.Name, proxy.Name, authorization.Type())
 						err = cacheCon.Set(context.Background(), key, &redis.AuthEnvelope{CtxType: redis.ChangeType_API, Context: auth}, 0)
 					}

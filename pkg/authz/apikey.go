@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"context"
-    "github.com/bladedancer/envoyxds/pkg/cache"
+
+	"github.com/bladedancer/envoyxds/pkg/cache"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 )
 
-const apiScheme = "apikey"
+const apiScheme = "apiKey"
 
 type apikey struct {
 	hdrs   map[string]string
