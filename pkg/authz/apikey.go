@@ -46,6 +46,7 @@ func determineExtractKey(authIn string, hdrs map[string]string, query string) st
     switch authIn {
     case "header":
         apiKey=hdrs["x-api-key"]
+        log.Infof("x=api-key = %s ", apiKey)
     case "query":
         //Not Implemented
     }
@@ -56,6 +57,6 @@ func determineExtractKey(authIn string, hdrs map[string]string, query string) st
 func (a *apikey) Authorize() bool {
     apiKey:=determineExtractKey(a.authIn, a.hdrs, a.query)
     apiCtx:=getAPIContext(a.auth)
-    log.Infof("Comparing Key %s from Header to cached Key %s ", apiKey, apiCtx.Key)
+    log.Infof("Comparing Key %s from Header to cached Key %s result %v", apiKey, apiCtx.Key, apiKey==apiCtx.Key)
 	return apiKey==apiCtx.Key
 }
