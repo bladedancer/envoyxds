@@ -7,6 +7,7 @@ import (
 
 	"github.com/bladedancer/envoyxds/pkg/base"
 	"github.com/bladedancer/envoyxds/pkg/cache"
+    code "google.golang.org/genproto/googleapis/rpc/code"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 
@@ -34,7 +35,7 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		log.Error(err)
 		resp = &auth.CheckResponse{
 			Status: &rpcstatus.Status{
-				Code: int32(0),
+				Code: int32(code.Code_UNKNOWN),
 			},
 			HttpResponse: &auth.CheckResponse_DeniedResponse{
 				DeniedResponse: &auth.DeniedHttpResponse{
@@ -47,10 +48,10 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		}
 
 	} else if !authorized {
-		log.Info("Not Authorized, but we don't care, yet")
+		log.Info("Not Authorized")
 		resp = &auth.CheckResponse{
 			Status: &rpcstatus.Status{
-				Code: int32(0),
+				Code: int32(code.Code_UNAUTHENTICATED),
 			},
 			HttpResponse: &auth.CheckResponse_DeniedResponse{
 				DeniedResponse: &auth.DeniedHttpResponse{
@@ -77,7 +78,7 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		}
 		resp = &auth.CheckResponse{
 			Status: &rpcstatus.Status{
-				Code: int32(0),
+				Code: int32(code.Code_OK),
 			},
 			HttpResponse: &auth.CheckResponse_OkResponse{
 				OkResponse: &auth.OkHttpResponse{

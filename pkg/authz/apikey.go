@@ -28,26 +28,21 @@ func NewAPIKey(req *auth.CheckRequest) Authorization {
 	hdrs := req.GetAttributes().GetRequest().GetHttp().GetHeaders()
 	query := req.GetAttributes().GetRequest().GetHttp().GetQuery()
 	ext := req.GetAttributes().GetContextExtensions()
-	//Arbitrary results, so far
-	key := "unkonwn"
-	// query is empty via curl at the moment
-	// This is where the crux lies for now
-	if len(ext) > 0 {
-		key = fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
-	}
+	key:= fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
+	authIn:=ext["auth_in"]
 	envelope := &cache.AuthEnvelope{}
 	log.Infof("Looking in the Cache %s", key)
 	c.Get(context.Background(), key, envelope, true)
 	log.Infof("Result from Cache %v", envelope)
 
-	return &apikey{hdrs: hdrs, query: query, auth: envelope}
+	return &apikey{hdrs: hdrs, query: query, authIn: authIn, auth: envelope}
 }
 func determineExtractKey(authIn string, hdrs map[string]string, query string) string {
     apiKey:=""
     switch authIn {
     case "header":
         apiKey=hdrs["x-api-key"]
-        log.Infof("x=api-key = %s ", apiKey)
+        log.Infof("x-api-key = %s ", apiKey)
     case "query":
         //Not Implemented
     }
