@@ -4,12 +4,16 @@ import (
 	"fmt"
 
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
+    "context"
 )
 
 const apiScheme = "apikey"
 
 type apikey struct {
-	key string
+    hdrs map[string]string
+    query string
+    authIn string
+	auth *AuthEnvelope
 }
 
 //NewAPIKey returns new authorization interface
@@ -25,22 +29,33 @@ func NewAPIKey(req *auth.CheckRequest) Authorization {
 	//Arbitrary results, so far
 	key := "unkonwn"
 	// query is empty via curl at the moment
-	if len(hdrs) > 0 {
-		//todo
-	}
-	if len(query) > 0 {
-		//todo
-	}
 	// This is where the crux lies for now
 	if len(ext) > 0 {
-		key = fmt.Sprintf("%s:%s:%s:", ext["tenant"], ext["proxy"], apiScheme)
+		key = fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
 	}
+	envelope:=&AuthEnvelope{}
+	log.Infof("Looking in the Cache %s", key )
+	c.Get(context.Background(), key, envelope,true)
+	log.Infof("Result from Cache %v", envelope)
 
-	return &apikey{key: key}
+
+	return &apikey{hdrs:hdrs , query:query,auth: envelope}
+}
+func determineExtractKey(authIn string, hdrs map[string]string, query string) string {
+    apiKey:=""
+    switch authIn {
+    case "header":
+        apiKey=hdrs["X-API-KEY"]
+    case "query":
+        //Not Implemented
+    }
+    return apiKey
 }
 
 //Authorize *auth.CheckResponse
 func (a *apikey) Authorize() bool {
-	//TODO Check Redis Cache
-	return true
+    apiKey:=determineExtractKey(a.authIn, a.hdrs, a.query)
+    apiCtx:=getAPIContext(a.auth)
+    log.Infof("Comparing Key %s from Header to cached Key %s ", apiKey, apiCtx.Key)
+	return apiKey==apiCtx.Key
 }

@@ -13,6 +13,7 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	_type "github.com/envoyproxy/go-control-plane/envoy/type"
+    "github.com/golang/protobuf/ptypes"
 )
 
 // AuthorizationServer empty struct because this isn't a fancy example
@@ -46,6 +47,7 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		}
 
 	} else if !authorized {
+	    log.Info("Not Authorized, but we don't care, yet")
 		resp = &auth.CheckResponse{
 			Status: &rpcstatus.Status{
 				Code: int32(0),
@@ -107,19 +109,24 @@ func Run() error {
 	}
 	return nil
 }
+func getAPIContext(envelope *AuthEnvelope) *ApiKeyMessage {
+    msg:=ApiKeyMessage{}
+    ptypes.UnmarshalAny(envelope.Context,&msg)
+    return &msg
+}
+
 func checkAgainstScheme(req *auth.CheckRequest) bool {
 	authorized := false
-	out := &ApiKeyMessage{}
-	c.Get(context.Background(), "APIKey", out, true)
-	log.Infof("Passthrough with key %s", out.Key)
 
 	log.Infof("Request Headers: %v", req.GetAttributes().GetRequest().GetHttp().GetHeaders())
 	log.Infof("Query String: %v", req.GetAttributes().GetRequest().GetHttp().GetQuery())
 	log.Infof("Context Extensions: %+v", req.GetAttributes().GetContextExtensions())
 
 	extensions := req.GetAttributes().GetContextExtensions()
+	log.Infof("Auth Type=%s", extensions["auth_type"])
 	switch extensions["auth_type"] {
 	case "apiKey":
+	    log.Infof("Calling API Authorize")
 		authorized = NewAPIKey(req).Authorize()
 	case "basic":
 		//TODOO

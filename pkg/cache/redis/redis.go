@@ -60,9 +60,16 @@ func (r *redis) Close() error {
 	return err
 }
 
+func (r *redis) checkConnection() {
+    if r.client.Ping().Err() !=nil{
+        log.Warnf("Attempting to reestablish Connection %s", r.endpoints[0])
+        r.Connect()
+    }
+}
 // Put adds a new value to a key if the key does not already exist; else it updates the value passed
 // to the specified key. 'ttl' is time-to-live in seconds (0 means forever).
 func (r *redis) Set(ctx context.Context, key string, val proto.Message, ttl int64) error {
+    r.checkConnection()
 	data, err := proto.Marshal(val)
 	if err != nil {
 		return err
@@ -78,9 +85,10 @@ func (r *redis) Set(ctx context.Context, key string, val proto.Message, ttl int6
 // Get unmarshals the protocol buffer message found at key into out, if found.
 func (r *redis) Get(ctx context.Context, key string, out proto.Message, ignoreNotFound bool) error {
 
+    r.checkConnection()
 	b, err := r.client.Get(key).Bytes()
 	if err != nil {
-		log.Warnf("Error on Get %s", err)
+		log.Warnf("Error on Get %v", err)
 	}
 	proto.Unmarshal(b, out)
 	return err
@@ -88,6 +96,6 @@ func (r *redis) Get(ctx context.Context, key string, out proto.Message, ignoreNo
 
 // Delete Delete the key at a specific value
 func (r *redis) Delete(ctx context.Context, key string, recurse bool, out proto.Message) error {
-	r.client.Del(key).Err()
+    r.checkConnection()
 	return r.client.Del(key).Err()
 }
