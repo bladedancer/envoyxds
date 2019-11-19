@@ -69,6 +69,7 @@ func (a PassthroughAuthorization) Type() AuthorizationType {
 type APIKeyAuthorization struct {
 	Name     string
 	Location string
+	Key      string
 }
 
 // Type Implement the Authorization
@@ -83,6 +84,7 @@ func (a APIKeyAuthorization) Type() AuthorizationType {
 // HTTPAuthorization Http Basic/Bearer authorization scheme.
 type HTTPAuthorization struct {
 	Scheme string
+	Token  string
 }
 
 // Type Implement the Authorization

@@ -261,10 +261,12 @@ func getFrontendAuthorization(authAttrs _Attrs) apimgmt.Authorization {
 		auth = &apimgmt.APIKeyAuthorization{
 			Name:     authAttrs["name"].(string),
 			Location: authAttrs["in"].(string),
+			Key:      authAttrs["key"].(string),
 		}
 	case apimgmt.AuthorizationTypeHTTP:
 		auth = &apimgmt.HTTPAuthorization{
 			Scheme: authAttrs["scheme"].(string),
+			Token:  authAttrs["token"].(string),
 		}
 	}
 
