@@ -12,10 +12,11 @@ import (
 const apiScheme = "apiKey"
 
 type apikey struct {
-	hdrs   map[string]string
-	query  string
-	authIn string
-	auth   *cache.AuthEnvelope
+	hdrs     map[string]string
+	query    string
+	authIn   string
+	authName string
+	auth     *cache.AuthEnvelope
 }
 
 //NewAPIKey returns new authorization interface
@@ -28,31 +29,32 @@ func NewAPIKey(req *auth.CheckRequest) Authorization {
 	hdrs := req.GetAttributes().GetRequest().GetHttp().GetHeaders()
 	query := req.GetAttributes().GetRequest().GetHttp().GetQuery()
 	ext := req.GetAttributes().GetContextExtensions()
-	key:= fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
-	authIn:=ext["auth_in"]
+	key := fmt.Sprintf("%s-%s-%s", ext["tenant"], ext["proxy"], apiScheme)
+	authIn := ext["auth_in"]
+	authName := ext["auth_name"]
 	envelope := &cache.AuthEnvelope{}
 	log.Infof("Looking in the Cache %s", key)
 	c.Get(context.Background(), key, envelope, true)
 	log.Infof("Result from Cache %v", envelope)
 
-	return &apikey{hdrs: hdrs, query: query, authIn: authIn, auth: envelope}
+	return &apikey{hdrs: hdrs, query: query, authIn: authIn, authName: authName, auth: envelope}
 }
-func determineExtractKey(authIn string, hdrs map[string]string, query string) string {
-    apiKey:=""
-    switch authIn {
-    case "header":
-        apiKey=hdrs["x-api-key"]
-        log.Infof("x-api-key = %s ", apiKey)
-    case "query":
-        //Not Implemented
-    }
-    return apiKey
+func determineExtractKey(authIn string, authName string, hdrs map[string]string, query string) string {
+	apiKey := ""
+	switch authIn {
+	case "header":
+		apiKey = hdrs[authName]
+		log.Infof("%s = %s ", authName, apiKey)
+	case "query":
+		//Not Implemented
+	}
+	return apiKey
 }
 
 //Authorize *auth.CheckResponse
 func (a *apikey) Authorize() bool {
-    apiKey:=determineExtractKey(a.authIn, a.hdrs, a.query)
-    apiCtx:=getAPIContext(a.auth)
-    log.Infof("Comparing Key %s from Header to cached Key %s result %v", apiKey, apiCtx.Key, apiKey==apiCtx.Key)
-	return apiKey==apiCtx.Key
+	apiKey := determineExtractKey(a.authIn, a.authName, a.hdrs, a.query)
+	apiCtx := getAPIContext(a.auth)
+	log.Infof("Comparing Key %s from Header to cached Key %s result %v", apiKey, apiCtx.Key, apiKey == apiCtx.Key)
+	return apiKey == apiCtx.Key
 }

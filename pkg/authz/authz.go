@@ -7,7 +7,7 @@ import (
 
 	"github.com/bladedancer/envoyxds/pkg/base"
 	"github.com/bladedancer/envoyxds/pkg/cache"
-    code "google.golang.org/genproto/googleapis/rpc/code"
+	code "google.golang.org/genproto/googleapis/rpc/code"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 
@@ -145,6 +145,7 @@ func checkAgainstScheme(req *auth.CheckRequest) bool {
 
 // backendAuth generates the backend authorization headers.
 func backendAuth(req *auth.CheckRequest) (map[string]string, error) {
+	log.Infof("backendAuth")
 	extensions := req.GetAttributes().GetContextExtensions()
 	if authType, ok := extensions["be_type"]; ok {
 		switch authType {
@@ -183,7 +184,7 @@ func backendAuthAPIKey(extensions map[string]string) (map[string]string, error) 
 
 	// Get the credential
 	creds := &cache.Credential{}
-	if err := c.Get(context.Background(), fmt.Sprintf("%s-%s", tenant, proxy), creds, true); err != nil {
+	if err := c.Get(context.Background(), fmt.Sprintf("%s-%s-creds", tenant, proxy), creds, true); err != nil {
 		return nil, err
 	}
 	if creds == nil || creds.Credential == nil {
