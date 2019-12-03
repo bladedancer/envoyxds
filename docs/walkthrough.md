@@ -90,11 +90,13 @@ If you are not ambitious enough to setup the DNS resolution, you can add the Hos
 
 **Invoke an API secured by Authz**
 
-`curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password" https://localhost:10000/api/music/instruments`
+```
+curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password" https://localhost:10000/api/music/instruments
+```
 
 > The above command should yield the following...
 
-```
+```json
 [{"id":"5cd2ffad4c48940220ade42e","type":"ukulele","price":150,"currency":"EUR"},{"id":"5cd2fa168a4dde021faae3f8","type":"clarinet","price":650,"currency":"USD"},{"id":"5cd2fa041782ec021aad73ee","type":"drums","price":1750,"currency":"USD"},{"id":"5cd2f9f68a4dde0218addde0","type":"piano","price":1100,"currency":"EUR"},{"id":"5cd2f9ca08ac9a0219adee3d","type":"guitar","price":400,"currency":"GBP"}]
 ```
 
