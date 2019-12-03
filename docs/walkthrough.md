@@ -97,17 +97,161 @@ curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password"
 > The above command should yield the following...
 
 ```json
-[{"id":"5cd2ffad4c48940220ade42e","type":"ukulele","price":150,"currency":"EUR"},{"id":"5cd2fa168a4dde021faae3f8","type":"clarinet","price":650,"currency":"USD"},{"id":"5cd2fa041782ec021aad73ee","type":"drums","price":1750,"currency":"USD"},{"id":"5cd2f9f68a4dde0218addde0","type":"piano","price":1100,"currency":"EUR"},{"id":"5cd2f9ca08ac9a0219adee3d","type":"guitar","price":400,"currency":"GBP"}]
+[
+  {
+    "id": "5cd2ffad4c48940220ade42e",
+    "type": "ukulele",
+    "price": 150,
+    "currency": "EUR"
+  },
+  {
+    "id": "5cd2fa168a4dde021faae3f8",
+    "type": "clarinet",
+    "price": 650,
+    "currency": "USD"
+  },
+  {
+    "id": "5cd2fa041782ec021aad73ee",
+    "type": "drums",
+    "price": 1750,
+    "currency": "USD"
+  },
+  {
+    "id": "5cd2f9f68a4dde0218addde0",
+    "type": "piano",
+    "price": 1100,
+    "currency": "EUR"
+  },
+  {
+    "id": "5cd2f9ca08ac9a0219adee3d",
+    "type": "guitar",
+    "price": 400,
+    "currency": "GBP"
+  }
+]
 ```
 
-**What happened?**
+####What happened?
+
+[Sequence of Events](music.png)
+
+#####Frontend Envoy
+**Listen to all traffic on 443**
+
+```json
+{
+    "name": "listener_42",
+    "address": {
+      "socket_address": {
+        "address": "0.0.0.0",
+        "port_value": 443
+      }
+    }
+}
+```
+
+**Apply the Filters**
+
+````json
+[
+  {
+    "name": "envoy.lua",
+    "config": {
+      "inline_code": "\n    function envoy_on_request(request_handle)\n       for key, value in pairs(request_handle:headers()) do\n          request_handle:logInfo(key .. \": \" .. value)\n       end\n       local headers, body = request_handle:httpCall(\n         \"service_xds_shard\",\n         {\n          [\":method\"] = \"GET\",\n          [\":path\"] = \"\/shard\",\n          [\":authority\"] = \"service_xds_shard\"\n        },\n        request_handle:headers():get(\":authority\") .. \":\" .. request_handle:headers():get(\":path\") ,\n        5000)\n      request_handle:logInfo(\"Adding Shard via Lua \" .. body)\n      request_handle:headers():add(\"x-shard\", body)\n    end"
+    }
+  },
+  {
+    "name": "envoy.router"
+  }
+]
+````
+The above filter chain will invoke the Lua Filter, followed by the built-in envoy.router.  The Lua filter is defined with inline_code and will call a simple service defined [within this module](../pkg/xds/tennantroute.go) 
 
 
-**Invoke an API for a given tenant**
-`curl --insecure -H "Host: test-0.bladedancer.dynu.net"  https://localhost:10000/route-0`
+**Perform the Route**
 
-The above command will call the frontend 
+`request_handle:headers():add(\"x-shard\", body)`
 
-**Invoke an API for a given tenant**
+The Lua Filter has now created a header entry called x-shard, which will now be used to perform the route from the frontend to the appropriate backend cluster
+```json
+[
+  {
+    "match": {
+      "prefix": "/"
+    },
+    "route": {
+      "cluster_header": "x-shard"
+    },
+    "name": "front"
+  }
+]
+```
 
-`curl --insecure -H "Host: test-0.bladedancer.dynu.net"  https://localhost:10000/route-0`
+#####Backend Envoy
+
+**Listen to all traffic on 80**
+
+```json
+{
+    "name": "listener_42",
+    "address": {
+      "socket_address": {
+        "address": "0.0.0.0",
+        "port_value": 80
+      }
+    }
+}
+```
+
+**Apply the Filters**
+
+````json
+[
+                  {
+                    "name": "envoy.ext_authz",
+                    "config": {
+                      "grpc_service": {
+                        "envoy_grpc": {
+                          "cluster_name": "service_authz"
+                        },
+                        "timeout": "5s"
+                      }
+                    }
+                  },
+                  {
+                    "name": "envoy.router"
+                  }
+]
+````
+The above filter chain will invoke the [authz](../pkg/authz/authz.go) grpc service, followed by the built-in evnoy.router filter. This configuration is not intuitive, because it actually pulls config from the route filter using _"per_filter_config"_ and passes this to the authz service.
+
+
+**Perform the Route**
+
+The Authz filter has now responded with the authoriztion decision. Most commonly a **200** for _authorized_ or **403** for _forbidden_. If authorized the request will continue upstream to the Music API, but if forbidden it will reject back to the requester
+```json
+{
+  "match": {
+    "prefix": "/api/music/"
+  },
+  "route": {
+    "cluster": "t_gavin-p_3",
+    "prefix_rewrite": "/envoy/music/v2/",
+    "host_rewrite": "prod-e4ec6c3369cdafa50169ce18e33d00bb.apicentral.axwayamplify.com"
+  },
+  "per_filter_config": {
+    "envoy.ext_authz": {
+      "check_settings": {
+        "context_extensions": {
+          "auth_type": "apiKey",
+          "auth_in": "header",
+          "tenant": "gavin",
+          "proxy": "3",
+          "auth_name": "key"
+        }
+      }
+    }
+  },
+  "name": "t_gavin-p_3-prefix"
+}
+```

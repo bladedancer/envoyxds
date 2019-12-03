@@ -1,0 +1,66 @@
+@startuml
+actor "Request"
+participant "Envoy\nFront"
+participant "Envoy\nBack\nShard-x"
+participant "XDS"
+participant "Authz"
+participant "Postgres"
+participant "Redis"
+alt "On Startup"
+"XDS"->"Postgres":Get Tenant Info
+"Postgres"->"XDS": Tenant Info
+"XDS"->"XDS": Build Tenant Datasource
+alt "Establish dialog with XDS"
+"Envoy\nFront"->"XDS":Request for Updates
+"XDS"->"Envoy\nFront":On Change
+end
+alt "Establish dialog with XDS"
+"Envoy\nBack\nShard-x"->"XDS":Request for Updates
+"XDS"->"Envoy\nBack\nShard-x":On Change
+end
+end
+Request -> "Envoy\nFront": Request: api/music/instruments
+"Envoy\nFront"->"Envoy\nFront": Listener
+note over "Envoy\nFront"
+All traffic on 443 is
+captured by listener and
+applied to filter chain
+end note
+alt "Invoke Lua Filter"
+"Envoy\nFront"->"XDS": Lua Filter\n("Get Shard")
+note over "Envoy\nFront"
+A simple service exists in XDS
+to determine the appropriate shard
+end note
+"XDS"->"Envoy\nFront": return shard
+"Envoy\nFront"->"Envoy\nFront": Modify header to include shard
+end
+alt Route Config
+"Envoy\nFront"->"Envoy\nBack\nShard-x": Route request\nto appropriate shard
+note over "Envoy\nFront"
+          "match": {
+           "prefix": "/"
+          },
+          "route": {
+           "cluster_header": "x-shard"
+          }
+end note
+end
+"Envoy\nBack\nShard-x"->"Envoy\nBack\nShard-x": Listener
+note over "Envoy\nBack\nShard-x"
+All traffic on 80 is
+captured by listener and
+applied to filter chain
+end note
+alt "Authz Flow"
+"Envoy\nBack\nShard-x"->"Authz":Is Authorized?
+"Authz"->"Redis": Lookup Key
+"Redis"->"Authz": Return Key
+"Authz"->"Authz": Validate Request
+"Authz"->"Envoy\nBack\nShard-x": Return Response (200, 403, etc)
+end
+alt "If Authorzed"
+"Envoy\nBack\nShard-x"->"Music":Get Instruments
+"Music"->"Request":Return Result (Unwind)
+end
+@enduml
