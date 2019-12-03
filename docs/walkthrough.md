@@ -131,11 +131,11 @@ curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password"
 ]
 ```
 
-####What happened?
+#### What happened?
 
 [Sequence of Events](music.png)
 
-#####Frontend Envoy
+##### Frontend Envoy
 **Listen to all traffic on 443**
 
 ```json
@@ -187,7 +187,7 @@ The Lua Filter has now created a header entry called x-shard, which will now be 
 ]
 ```
 
-#####Backend Envoy
+##### Backend Envoy
 
 **Listen to all traffic on 80**
 
