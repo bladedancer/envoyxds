@@ -43,7 +43,8 @@ echo ======================
 echo === Install Images ===
 echo ======================
 
-#docker pull bladedancer/envoyxds:latest
+docker pull $REPO/envoyxds:latest
+docker pull $REPO/authz:latest
 k3d i --name=xds  $REPO/envoyxds:latest
 k3d i --name=xds  $REPO/authz:latest
 
