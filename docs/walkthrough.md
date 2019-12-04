@@ -1,20 +1,25 @@
 # POC Reference
-While the code itself is self documenting the following information should help for those wanting to play around with the example
+While the code itself is self documenting the following information should help for those wanting to dig deeper and make modifications to the example
+
 
 ## What are we running
-Helm charts have been configured to startup the entire example.
+[Helm charts](../helm/saas/requirements.yaml) have been configured to startup the entire example. 
 
-### Front
+### XDS
 
-The front envoy proxy runs a standard Envoy image from 
+### Authz
 
-### Back
+### Frontend Envoy
+
+The frontend envoy acts as sort of loadbalancer to determine the appropriate backend cluster to allow requests to travel upstream. In addition, Authorization schemes, such as API-KEY, can be applied here to short circuit invalid requests
+
+### Backenend Envoy
+
+The backenend envoy is seperated into different partitions, called shards, which allows for multiple configurations to be applied by tenant, while still achieving the goal of horizontal scale. In addition, here it is possible to apply specific credential requiements to authenticate with backend resources, using OAuth or other similar mechanisms.
+
+> Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
 
 ### Redis
-```
-version: 9.5.2
-appVersion: 5.0.5
-```
 
 
 The Redis Cache is used by the Authz service in order to perform some simple Authentication. When a frontend request is received it is delegated to the Authz service where the service will examine the header values to validate the appropriate API Key is present. The Cache could be used for other items such as rate limiting
