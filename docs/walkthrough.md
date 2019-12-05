@@ -1,17 +1,69 @@
 # POC Reference
-While the code itself is self documenting the following information should help for those wanting to dig deeper and make modifications to the example
+While the code itself is self documenting the following information should help for those wanting to dig deeper and potentially make modifications to the example
 
+## High Level Architecture
+
+<img src="https://github.com/bladedancer/envoyxds/raw/master/docs/envoy-shard-2.png" width="800">
 
 ## What are we running
 [Helm charts](../helm/saas/requirements.yaml) have been configured to startup the entire example. 
 
+### Redis
+
+### Postgres
+
 ### XDS
 
+The [XDS Service](../pkg/xds/envoyxds.go) is responsible for providing configuration to envoys dynamically. Upon startup an envoy's 
+configuration will specify dynamic resource sections and indicate that these dependencies are 
+to be fulfilled by an XDS service.
+
+```json
+{
+     "lds_config": {
+      "api_config_source": {
+       "api_type": "GRPC",
+       "grpc_services": [
+        {
+         "envoy_grpc": {
+          "cluster_name": "service_xds"
+         }
+        }
+       ]
+      }
+     },
+     "cds_config": {
+      "api_config_source": {
+       "api_type": "GRPC",
+       "grpc_services": [
+        {
+         "envoy_grpc": {
+          "cluster_name": "service_xds"
+         }
+        }
+       ]
+      }
+     }
+}
+```
+
+> The XDS service is defined as a [CLI](../cmd/xds/cmd/cmd.go) using Cobra and runs just the same as any other defined service. (Using Cobra allows for easier local debug sessions and clear understanding of parameters )
+> Dependencies on [Redis](#Redis) and [Postgres](#Postgres) 
+
 ### Authz
+
+The [Authz Service](../pkg/authz/authz.go) is responsible for providing an external authentication point for an envoy proxy. 
+ configuration to envoys dynamically. Upon startup an envoy's 
+configuration will specify dynamic resource sections and indicate that these dependencies are 
+to be fulfilled by an XDS service.
+
 
 ### Frontend Envoy
 
 The frontend envoy acts as sort of loadbalancer to determine the appropriate backend cluster to allow requests to travel upstream. In addition, Authorization schemes, such as API-KEY, can be applied here to short circuit invalid requests
+
+> Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
+
 
 ### Backenend Envoy
 
@@ -19,7 +71,6 @@ The backenend envoy is seperated into different partitions, called shards, which
 
 > Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
 
-### Redis
 
 
 The Redis Cache is used by the Authz service in order to perform some simple Authentication. When a frontend request is received it is delegated to the Authz service where the service will examine the header values to validate the appropriate API Key is present. The Cache could be used for other items such as rate limiting
