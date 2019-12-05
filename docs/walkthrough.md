@@ -11,7 +11,16 @@ While the code itself is self documenting the following information should help 
 
 ### Redis
 
+The Redis Cache is used by the Authz service in order to perform some simple 
+Authentication. When a frontend request is received it is delegated to the Authz
+service where the service will examine the header values to validate the 
+appropriate API Key is present. The Cache could be used for other items such as 
+rate limiting and tenant-route/shard affinity
+
 ### Postgres
+
+Currently, Postgres is serving the purporse of mimicking an API-C agent. Ideally, this would all be event-driven, using Chimera or similar, 
+but for the POC we hit the easy button.
 
 ### XDS
 
@@ -53,15 +62,17 @@ to be fulfilled by an XDS service.
 
 ### Authz
 
-The [Authz Service](../pkg/authz/authz.go) is responsible for providing an external authentication point for an envoy proxy. 
- configuration to envoys dynamically. Upon startup an envoy's 
-configuration will specify dynamic resource sections and indicate that these dependencies are 
-to be fulfilled by an XDS service.
+The [Authz Service](../pkg/authz/authz.go) is responsible for providing an 
+external authentication point for an envoy proxy. When specfifed within the configuration
+an envoy proxy will send an gRpc request to Authz to check if the request is authorized. 
+For the POC, the Authz implementation is limited to "key", but this can easily be extended to
+support Basic, JWT, OAuth, or even OPA.
 
 
 ### Frontend Envoy
 
-The frontend envoy acts as sort of loadbalancer to determine the appropriate backend cluster to allow requests to travel upstream. In addition, Authorization schemes, such as API-KEY, can be applied here to short circuit invalid requests
+The frontend envoy acts as sort of loadbalancer to determine the appropriate backend cluster (shard) to allow requests to travel. 
+In addition, Authorization schemes, such as API-KEY, can be applied here to short circuit invalid requests
 
 > Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
 
@@ -71,10 +82,6 @@ The frontend envoy acts as sort of loadbalancer to determine the appropriate bac
 The backenend envoy is seperated into different partitions, called shards, which allows for multiple configurations to be applied by tenant, while still achieving the goal of horizontal scale. In addition, here it is possible to apply specific credential requiements to authenticate with backend resources, using OAuth or other similar mechanisms.
 
 > Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
-
-
-
-The Redis Cache is used by the Authz service in order to perform some simple Authentication. When a frontend request is received it is delegated to the Authz service where the service will examine the header values to validate the appropriate API Key is present. The Cache could be used for other items such as rate limiting
 
 
 ###  Launching the example

@@ -45,3 +45,7 @@ kubectl port-forward --address 0.0.0.0 deployment/front 9901
 ```
 
 Then configure your firewall to route incoming requests to that machine, such that urls like: `https://test-9.bladedancer.dynu.net/route-1` resolve.
+
+## Project Walkthrough
+
+For a more in depth tour go [here](docs/walkthrough.md)
