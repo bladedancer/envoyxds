@@ -6,6 +6,7 @@ While the code itself is self documenting the following information should help 
 <img src="https://github.com/bladedancer/envoyxds/raw/master/docs/envoy-shard-2.png" width="800">
 
 ## What are we running
+
 [Helm charts](../helm/saas/requirements.yaml) have been configured to startup the entire example. 
 
 ### Redis
@@ -189,7 +190,7 @@ curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password"
 
 #### What happened?
 
-[Sequence of Events](music.png)
+<img src="https://github.com/bladedancer/envoyxds/raw/master/docs/music.png" width="800">
 
 ##### Frontend Envoy
 **Listen to all traffic on 443**
