@@ -65,7 +65,7 @@ to be fulfilled by an XDS service.
 
 The [Authz Service](../pkg/authz/authz.go) is responsible for providing an 
 external authentication point for an envoy proxy. When specfifed within the configuration
-an envoy proxy will send an gRpc request to Authz to check if the request is authorized. 
+an envoy proxy will send an gRPC request to Authz to check if the request is authorized. 
 For the POC, the Authz implementation is limited to "key", but this can easily be extended to
 support Basic, JWT, OAuth, or even OPA.
 
@@ -100,14 +100,15 @@ Essentially, some [DDL](../helm/postgresql/files/docker-entrypoint-initdb.d/init
 2. Within [watch.go](../pkg/xds/watch.go) the Redis Cache and DB are populated with inital values
 
 **Redis for Frontend Auth**
-```go
+```cgo
+
 if err == nil && auth != nil {
   key := fmt.Sprintf("%s-%s-%s", tenant.Name, proxy.Name, authorization.Type())
   err = cacheCon.Set(context.Background(), key, &redis.AuthEnvelope{CtxType: redis.ChangeType_API, Context: auth}, 0)
 }
 ```
 **Redis for Backend Auth**
-```go
+```cgo
 for _, proxy := range tenant.Proxies {
 	if proxy.Backend.Credential != nil {
     	cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s-creds", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
@@ -116,10 +117,11 @@ for _, proxy := range tenant.Proxies {
 ```
 
 **Postgres Tenant Route**
-OOB Initialization will generate 20 tenants with 10 routes each. This can be configured by chaning [values.yaml](../helm/saas/values.yaml) within
-[watch.go](../pkg/xds/watch.go) the tenant/route info is popluated
 
-```go
+OOB Initialization will generate 20 tenants with 10 routes each. This can be configured by changing [values.yaml](../helm/saas/values.yaml).
+The tenant route information stored within Postgres is populated within [watch.go](../pkg/xds/watch.go) 
+
+```cgo
 tenants, updateChan := datasource.TenantDatasource.GetTenants()
 go func() {
 	for tenants := range updateChan {
@@ -334,12 +336,12 @@ The Lua Filter has now created a header entry called x-shard, which will now be 
                   }
 ]
 ````
-The above filter chain will invoke the [authz](../pkg/authz/authz.go) gRPC service, followed by the built-in evnoy.router filter. This configuration is not intuitive, because it actually pulls config from the route filter using _"per_filter_config"_ and passes this to the authz service.
+The above filter chain will invoke the [authz](../pkg/authz/authz.go) gRPC service, followed by the built-in evnoy.router filter. This configuration is not intuitive, because it actually pulls config from the route filter using _"per_filter_config"_ that is referenced in the next section and passes this to the authz service.
 
 
 **Perform the Route**
 
-The Authz filter has now responded with the authoriztion decision. Most commonly a **200** for _authorized_ or **403** for _forbidden_. If authorized the request will continue upstream to the Music API, but if forbidden it will reject back to the requester
+The Authz filter has now responded with the authoriztion decision. Most commonly a **200** for _authorized_ or **403** for _forbidden_. If authorized the request will continue to the Music API, but if forbidden it will reject back to the requester
 ```json
 {
   "match": {
