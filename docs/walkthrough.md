@@ -71,11 +71,13 @@ support Basic, JWT, OAuth, or even OPA.
 
 > Implemented using [Cobra](#Cobra)
 
-#### Cobra
+
+[Envoy Authz Documentation ](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/ext_authz_filter)
+
+### Cobra
 > The XDS and Authz services are defined as a [CLI](../cmd/xds/cmd/cmd.go) using Cobra and runs just the same as any other defined service. (Using Cobra allows for easier local debug sessions and clear understanding of parameters )
 > Dependencies on [Redis](#Redis) and [Postgres](#Postgres) 
 
-[Envoy Authz Documentation ](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/ext_authz_filter)
 
 ### Frontend Envoy
 
@@ -91,8 +93,45 @@ The backenend envoy is seperated into different partitions, called shards, which
 
 > Dependencies on [XDS](#XDS) and [AUTHZ](#Authz) services
 
+### Initialization
 
-###  Launching the example
+1. Prior to launching the containers there is some initialization that occurs to prepare the database. 
+Essentially, some [DDL](../helm/postgresql/files/docker-entrypoint-initdb.d/init.sql) to create the schema for dynamic proxy schema.
+2. Within [watch.go](../pkg/xds/watch.go) the Redis Cache and DB are populated with inital values
+
+**Redis for Frontend Auth**
+```go
+if err == nil && auth != nil {
+  key := fmt.Sprintf("%s-%s-%s", tenant.Name, proxy.Name, authorization.Type())
+  err = cacheCon.Set(context.Background(), key, &redis.AuthEnvelope{CtxType: redis.ChangeType_API, Context: auth}, 0)
+}
+```
+**Redis for Backend Auth**
+```go
+for _, proxy := range tenant.Proxies {
+	if proxy.Backend.Credential != nil {
+    	cacheCon.Set(context.Background(), fmt.Sprintf("%s-%s-creds", tenant.Name, proxy.Name), &redis.Credential{Credential: proxy.Backend.Credential}, 0)
+    	}
+    }
+```
+
+**Postgres Tenant Route**
+OOB Initialization will generate 20 tenants with 10 routes each. This can be configured by chaning [values.yaml](../helm/saas/values.yaml) within
+[watch.go](../pkg/xds/watch.go) the tenant/route info is popluated
+
+```go
+tenants, updateChan := datasource.TenantDatasource.GetTenants()
+go func() {
+	for tenants := range updateChan {
+		// There'd be an sync concern here in the real world.
+		deploymentManager.AddTenants(tenants...)
+		updateCredentials(tenants...)
+	}
+}()
+```
+
+
+## Launching the example
 
 **Prerequisites**
 
@@ -128,7 +167,7 @@ front-585987cfd6-6q54z   1/1     Running   0          13m
 
 ```
 
-### Build the Example: \(_Optional_\)
+## Build the Example: \(_Optional_\)
 
 If anyone should want to tweak the example on their own...
 
@@ -148,7 +187,7 @@ make all
 ```
 
 
-### Running the Example
+## Running the Example
 
 **Enable port forwarding**
 
@@ -203,11 +242,11 @@ curl -v --insecure -H "Host: test-gavin.bladedancer.dynu.net" -H "key: password"
 ]
 ```
 
-#### What happened?
+### What happened?
 
 <img src="https://github.com/bladedancer/envoyxds/raw/master/docs/music.png" width="800">
 
-##### Frontend Envoy
+#### Frontend Envoy
 **Listen to all traffic on 443**
 
 ```json
@@ -259,7 +298,7 @@ The Lua Filter has now created a header entry called x-shard, which will now be 
 ]
 ```
 
-##### Backend Envoy
+#### Backend Envoy
 
 **Listen to all traffic on 80**
 
@@ -295,7 +334,7 @@ The Lua Filter has now created a header entry called x-shard, which will now be 
                   }
 ]
 ````
-The above filter chain will invoke the [authz](../pkg/authz/authz.go) grpc service, followed by the built-in evnoy.router filter. This configuration is not intuitive, because it actually pulls config from the route filter using _"per_filter_config"_ and passes this to the authz service.
+The above filter chain will invoke the [authz](../pkg/authz/authz.go) gRPC service, followed by the built-in evnoy.router filter. This configuration is not intuitive, because it actually pulls config from the route filter using _"per_filter_config"_ and passes this to the authz service.
 
 
 **Perform the Route**
