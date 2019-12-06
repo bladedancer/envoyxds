@@ -19,7 +19,7 @@ rate limiting and tenant-route/shard affinity
 
 ### Postgres
 
-Currently, Postgres is serving the purporse of mimicking an API-C agent. Ideally, this would all be event-driven, using Chimera or similar, 
+Currently, Postgres is serving the purporse of mimicking interaction with API-C. Ideally, for a production solution, this would all be event-driven, using Chimera or similar, 
 but for the POC we hit the easy button.
 
 ### XDS
@@ -56,9 +56,10 @@ to be fulfilled by an XDS service.
      }
 }
 ```
+[Envoy XDS Documentation](https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol)
 
-> The XDS service is defined as a [CLI](../cmd/xds/cmd/cmd.go) using Cobra and runs just the same as any other defined service. (Using Cobra allows for easier local debug sessions and clear understanding of parameters )
-> Dependencies on [Redis](#Redis) and [Postgres](#Postgres) 
+> Implemented using [Cobra](#Cobra)
+
 
 ### Authz
 
@@ -68,6 +69,13 @@ an envoy proxy will send an gRpc request to Authz to check if the request is aut
 For the POC, the Authz implementation is limited to "key", but this can easily be extended to
 support Basic, JWT, OAuth, or even OPA.
 
+> Implemented using [Cobra](#Cobra)
+
+#### Cobra
+> The XDS and Authz services are defined as a [CLI](../cmd/xds/cmd/cmd.go) using Cobra and runs just the same as any other defined service. (Using Cobra allows for easier local debug sessions and clear understanding of parameters )
+> Dependencies on [Redis](#Redis) and [Postgres](#Postgres) 
+
+[Envoy Authz Documentation ](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/ext_authz_filter)
 
 ### Frontend Envoy
 
